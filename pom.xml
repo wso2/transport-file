@@ -14,20 +14,195 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-<parent>
-        <artifactId>org.wso2.carbon.transport.parent</artifactId>
-        <groupId>org.wso2.carbon.transport</groupId>
-        <version>6.0.32-SNAPSHOT</version>
-        <relativePath>../pom.xml</relativePath>
-    </parent>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.wso2</groupId>
+        <artifactId>wso2</artifactId>
+        <version>5</version>
+    </parent>
     <packaging>pom</packaging>
+    <groupId>org.wso2.carbon.transport</groupId>
     <artifactId>org.wso2.carbon.transport.file.parent</artifactId>
+    <version>6.0.32-SNAPSHOT</version>
     <name>WSO2 Carbon Transport File Parent</name>
+
     <modules>
         <module>org.wso2.carbon.transport.file</module>
-        <module>org.wso2.carbon.transport.remote-file-system</module>
         <module>org.wso2.carbon.transport.local-file-system</module>
+        <module>org.wso2.carbon.transport.remote-file-system</module>
+        <module>features</module>
     </modules>
+
+    <scm>
+        <url>https://github.com/wso2/transport-file.git</url>
+        <developerConnection>scm:git:https://github.com/wso2/transport-file.git</developerConnection>
+        <connection>scm:git:https://github.com/wso2/transport-file.git</connection>
+        <tag>HEAD</tag>
+    </scm>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.wso2.eclipse.osgi</groupId>
+                <artifactId>org.eclipse.osgi</artifactId>
+                <version>${equinox.osgi.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.wso2.eclipse.osgi</groupId>
+                <artifactId>org.eclipse.osgi.services</artifactId>
+                <version>${equinox.osgi.services.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.wso2.carbon.transport</groupId>
+                <artifactId>org.wso2.carbon.connector.framework</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.wso2.carbon.messaging</groupId>
+                <artifactId>org.wso2.carbon.messaging</artifactId>
+                <version>${carbon.messaging.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons.wso2</groupId>
+                <artifactId>commons-vfs2</artifactId>
+                <version>${commons-vfs2.wso2.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.jcraft</groupId>
+                <artifactId>jsch</artifactId>
+                <version>${jsch.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.wso2.carbon.transport</groupId>
+                <artifactId>org.wso2.carbon.transport.file</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.testng</groupId>
+                <artifactId>testng</artifactId>
+                <version>${testng.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.mockftpserver</groupId>
+                <artifactId>MockFtpServer</artifactId>
+                <version>${mock.ftp.server.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>commons-io.wso2</groupId>
+                <artifactId>commons-io</artifactId>
+                <version>${commons-io.wso2.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>commons-net</groupId>
+                <artifactId>commons-net</artifactId>
+                <version>${commons-net.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <extensions>
+            <extension>
+                <groupId>org.apache.maven.wagon</groupId>
+                <artifactId>wagon-ssh</artifactId>
+                <version>${maven.wagon.ssh.version}</version>
+            </extension>
+        </extensions>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>findbugs-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <configuration>
+                    <preparationGoals>clean install</preparationGoals>
+                    <autoVersionSubmodules>false</autoVersionSubmodules>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>docs</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>javadoc</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <properties>
+        <!-- Maven plugins -->
+        <maven.wagon.ssh.version>2.1</maven.wagon.ssh.version>
+
+        <!-- Dependencies -->
+        <org.wso2.carbon.core.version>5.1.0</org.wso2.carbon.core.version>
+        <carbon.kernel.package.import.version.range>[5.0.0, 6.0.0)</carbon.kernel.package.import.version.range>
+
+        <equinox.osgi.version>3.10.2.v20150203-1939</equinox.osgi.version>
+        <equinox.osgi.services.version>3.4.0.v20140312-2051</equinox.osgi.services.version>
+        <osgi.framework.import.version.range>[1.8.0, 2.0.0)</osgi.framework.import.version.range>
+        <osgi.service.tracker.import.version.range>[1.5.1, 2.0.0)</osgi.service.tracker.import.version.range>
+        <org.xml.sax.import.version.range>[0.0.0, 1.0.0)</org.xml.sax.import.version.range>
+        <javax.xml.bind.import.version.range>[0.0.0, 1.0.0)</javax.xml.bind.import.version.range>
+        <javax.xml.transform.import.version.range>[0.0.0, 1.0.0)</javax.xml.transform.import.version.range>
+        <javax.xml.validation.import.version.range>[0.0.0, 1.0.0)</javax.xml.validation.import.version.range>
+        <javax.net.ssl.import.version.range>[0.0.0, 1.0.0)</javax.net.ssl.import.version.range>
+
+        <commons-vfs2.wso2.version>2.0-wso2v15</commons-vfs2.wso2.version>
+        <commons-vfs2.wso2.version.range>[2.0.0, 3.0.0)</commons-vfs2.wso2.version.range>
+        <commons-net.version>3.6</commons-net.version>
+        <commons-io.wso2.version>2.4.0.wso2v1</commons-io.wso2.version>
+
+        <carbon.messaging.version>2.3.7</carbon.messaging.version>
+        <carbon.messaging.package.import.version.range>[2.0.0, 3.0.0)</carbon.messaging.package.import.version.range>
+        <slf4j.version>1.7.5</slf4j.version>
+        <!--Logging API version range-->
+        <slf4j.logging.package.import.version.range>[1.7.1, 2.0.0)</slf4j.logging.package.import.version.range>
+
+        <carbon.p2.plugin.version>2.0.1</carbon.p2.plugin.version>
+        <javax.jms.import.version.range>[2.0.1, 3.0.0)</javax.jms.import.version.range>
+        <file.transport.package.export.version>${project.version}</file.transport.package.export.version>
+
+        <!-- Package exports -->
+        <connector.framework.package.export.version>${project.version}</connector.framework.package.export.version>
+        <testng.version>6.9.10</testng.version>
+        <jsch.version>0.1.51.wso2v1</jsch.version>
+        <mock.ftp.server.version>2.7.1</mock.ftp.server.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
 </project>
+
