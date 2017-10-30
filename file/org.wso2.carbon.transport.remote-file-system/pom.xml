@@ -20,7 +20,7 @@
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-<parent>
+    <parent>
         <groupId>org.wso2.carbon.transport</groupId>
         <artifactId>org.wso2.carbon.transport.file.parent</artifactId>
         <version>6.0.35-SNAPSHOT</version>
@@ -28,16 +28,12 @@
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>org.wso2.carbon.transport.file</artifactId>
+    <artifactId>org.wso2.carbon.transport.remote-file-system</artifactId>
     <packaging>bundle</packaging>
-    <name>WSO2 Carbon Transport File Component</name>
-    <description>Carbon File Transport</description>
+    <name>WSO2 Carbon Transport Remote File System Component</name>
+    <description>Carbon Remote File System Transport</description>
 
     <dependencies>
-        <dependency>
-            <groupId>org.wso2.carbon.messaging</groupId>
-            <artifactId>org.wso2.carbon.messaging</artifactId>
-        </dependency>
         <dependency>
             <groupId>org.wso2.carbon.transport</groupId>
             <artifactId>org.wso2.carbon.connector.framework</artifactId>
@@ -59,6 +55,10 @@
             <artifactId>org.eclipse.osgi.services</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.jcraft</groupId>
+            <artifactId>jsch</artifactId>
+        </dependency>
+        <dependency>
             <groupId>commons-net</groupId>
             <artifactId>commons-net</artifactId>
         </dependency>
@@ -72,10 +72,46 @@
             <artifactId>commons-io</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.mockftpserver</groupId>
+            <artifactId>MockFtpServer</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.7.9</version>
+                <configuration>
+                    <destFile>${basedir}/target/coverage-reports/jacoco-unit.exec</destFile>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>jacoco-initialize</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>jacoco-site</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                        <configuration>
+                            <dataFile>${basedir}/target/coverage-reports/jacoco-unit.exec</dataFile>
+                            <outputDirectory>${basedir}/target/coverage-reports/site</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
     <properties>
         <export.package>
-            org.wso2.carbon.transport.file.*;version="${file.transport.package.export.version}"
+            org.wso2.carbon.transport.remotefilesystem.*;version="${file.transport.package.export.version}"
         </export.package>
         <import.package>
             org.osgi.framework.*;version="${osgi.framework.import.version.range}",
@@ -83,12 +119,14 @@
             org.slf4j.*;version="${slf4j.logging.package.import.version.range}",
             org.wso2.carbon.messaging.*;version="${carbon.messaging.package.import.version.range}",
             org.wso2.carbon.connector.framework.*;version="${connector.framework.package.export.version}",
-            org.apache.commons.vfs2.*;version="${commons-vfs2.wso2.version.range}"
+            org.apache.commons.vfs2.*;version="${commons-vfs2.wso2.version.range}",
+            com.jcraft.jsch.*;version="${jsch.version}"
         </import.package>
-        <bundle.activator>org.wso2.carbon.transport.file.connector.server.internal.FileConnectorBundleActivator</bundle.activator>
+        <bundle.activator>
+            org.wso2.carbon.transport.remotefilesystem.internal.RemoteFileSystemConnectorBundleActivator
+        </bundle.activator>
         <carbon.component>
             osgi.service; objectClass="org.wso2.carbon.messaging.ServerConnectorProvider"
         </carbon.component>
     </properties>
-
 </project>
