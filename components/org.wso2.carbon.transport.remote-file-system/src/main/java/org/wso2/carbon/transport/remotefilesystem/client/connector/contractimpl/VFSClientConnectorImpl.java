@@ -18,6 +18,7 @@
 
 package org.wso2.carbon.transport.remotefilesystem.client.connector.contractimpl;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
 import org.apache.commons.vfs2.FileSystemManager;
@@ -34,12 +35,10 @@ import org.wso2.carbon.transport.remotefilesystem.exception.RemoteFileSystemConn
 import org.wso2.carbon.transport.remotefilesystem.listener.RemoteFileSystemListener;
 import org.wso2.carbon.transport.remotefilesystem.message.RemoteFileSystemMessage;
 
-import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.ByteBuffer;
 import java.util.Map;
 
 /**
@@ -74,7 +73,6 @@ public class VFSClientConnectorImpl implements VFSClientConnector {
         String fileURI = connectorConfig.get(Constants.URI);
         String action = connectorConfig.get(Constants.ACTION);
         FileType fileType;
-        ByteBuffer byteBuffer;
         InputStream inputStream = null;
         OutputStream outputStream = null;
         FileObject path = null;
@@ -102,15 +100,14 @@ public class VFSClientConnectorImpl implements VFSClientConnector {
                         fileType = path.getType();
                     }
                     if (fileType == FileType.FILE) {
-                        byteBuffer = message.getBytes();
-                        byte[] bytes = byteBuffer.array();
+                        inputStream = message.getInputStream();
                         if (connectorConfig.get(Constants.APPEND) != null) {
                             outputStream = path.getContent().getOutputStream(
                                     Boolean.parseBoolean(connectorConfig.get(Constants.APPEND)));
                         } else {
                             outputStream = path.getContent().getOutputStream();
                         }
-                        outputStream.write(bytes);
+                        outputStream.write(IOUtils.toByteArray(inputStream));
                         outputStream.flush();
                     }
                     break;
@@ -159,8 +156,7 @@ public class VFSClientConnectorImpl implements VFSClientConnector {
                     if (path.exists()) {
                         //TODO: Do not assume 'path' always refers to a file
                         inputStream = path.getContent().getInputStream();
-                        byte[] bytes = toByteArray(inputStream);
-                        RemoteFileSystemMessage fileContent = new RemoteFileSystemMessage(ByteBuffer.wrap(bytes));
+                        RemoteFileSystemMessage fileContent = new RemoteFileSystemMessage(inputStream);
                         remoteFileSystemListener.onMessage(fileContent);
                     } else {
                         throw new RemoteFileSystemConnectorException(
@@ -188,29 +184,6 @@ public class VFSClientConnectorImpl implements VFSClientConnector {
             closeQuietly(inputStream);
             closeQuietly(outputStream);
         }
-    }
-
-    /**
-     * Obtain a byte[] from an input stream
-     *
-     * @param input The input stream that the data should be obtained from
-     * @return byte[] The byte array of data obtained from the input stream
-     * @throws IOException if something happen during the content read
-     */
-    private static byte[] toByteArray(InputStream input) throws IOException {
-        long count = 0L;
-        byte[] buffer = new byte[4096];
-        int n1;
-        ByteArrayOutputStream output = new ByteArrayOutputStream();
-        for (; -1 != (n1 = input.read(buffer)); count += (long) n1) {
-            output.write(buffer, 0, n1);
-        }
-        if (logger.isDebugEnabled()) {
-            logger.debug(count + " bytes read");
-        }
-        byte[] bytes = output.toByteArray();
-        closeQuietly(output);
-        return bytes;
     }
 
     /**

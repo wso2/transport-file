@@ -22,7 +22,10 @@ import org.wso2.carbon.transport.remotefilesystem.listener.RemoteFileSystemListe
 import org.wso2.carbon.transport.remotefilesystem.message.RemoteFileSystemBaseMessage;
 import org.wso2.carbon.transport.remotefilesystem.message.RemoteFileSystemMessage;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.util.concurrent.CountDownLatch;
+import java.util.stream.Collectors;
 
 /**
  * Test {@link RemoteFileSystemListener} implementation for testing purpose.
@@ -40,7 +43,8 @@ public class TestReadActionListener implements RemoteFileSystemListener {
     @Override
     public boolean onMessage(RemoteFileSystemBaseMessage remoteFileSystemBaseMessage) {
         RemoteFileSystemMessage message = (RemoteFileSystemMessage) remoteFileSystemBaseMessage;
-        content = new String(message.getBytes().array());
+        content = new BufferedReader(new InputStreamReader(message.getInputStream())).lines()
+                .collect(Collectors.joining("\n"));
         latch.countDown();
         return true;
     }

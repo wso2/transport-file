@@ -37,9 +37,11 @@ import org.wso2.carbon.transport.remotefilesystem.impl.RemoteFileSystemConnector
 import org.wso2.carbon.transport.remotefilesystem.message.RemoteFileSystemMessage;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -144,7 +146,8 @@ public class RemoteFileSystemClientConnectorTestCase {
         TestReadActionListener fileSystemListener = new TestReadActionListener(latch);
         VFSClientConnector clientConnector =
                 connectorFactory.createVFSClientConnector(parameters, fileSystemListener);
-        RemoteFileSystemMessage message = new RemoteFileSystemMessage(ByteBuffer.wrap(newContent.getBytes()));
+        InputStream stream = new ByteArrayInputStream(newContent.getBytes(StandardCharsets.UTF_8));
+        RemoteFileSystemMessage message = new RemoteFileSystemMessage(stream);
         clientConnector.send(message);
         latch.await(3, TimeUnit.SECONDS);
         FileEntry entry = (FileEntry) fileSystem.getEntry("/home/wso2/file2.txt");
@@ -152,6 +155,11 @@ public class RemoteFileSystemClientConnectorTestCase {
         String fileContent = new BufferedReader(new InputStreamReader(inputStream)).lines().
                 collect(Collectors.joining("\n"));
         Assert.assertEquals(fileContent, newContent, "File content invalid.");
+        try {
+            stream.close();
+        } catch (IOException e) {
+            //Ignore the exception.
+        }
     }
 
     @Test(description = "Write content by creating new file")
@@ -167,7 +175,8 @@ public class RemoteFileSystemClientConnectorTestCase {
         TestReadActionListener fileSystemListener = new TestReadActionListener(latch);
         VFSClientConnector clientConnector =
                 connectorFactory.createVFSClientConnector(parameters, fileSystemListener);
-        RemoteFileSystemMessage message = new RemoteFileSystemMessage(ByteBuffer.wrap(newContent.getBytes()));
+        InputStream stream = new ByteArrayInputStream(newContent.getBytes(StandardCharsets.UTF_8));
+        RemoteFileSystemMessage message = new RemoteFileSystemMessage(stream);
         clientConnector.send(message);
         latch.await(3, TimeUnit.SECONDS);
         FileEntry entry = (FileEntry) fileSystem.getEntry("/home/wso2/file4.txt");
@@ -175,6 +184,11 @@ public class RemoteFileSystemClientConnectorTestCase {
         String fileContent = new BufferedReader(new InputStreamReader(inputStream)).lines().
                 collect(Collectors.joining("\n"));
         Assert.assertEquals(fileContent, newContent, "File content invalid.");
+        try {
+            stream.close();
+        } catch (IOException e) {
+            //Ignore the exception.
+        }
     }
 
     @Test(description = "Check file content append.", dependsOnMethods = "fileContentReadTestCase")
@@ -191,7 +205,8 @@ public class RemoteFileSystemClientConnectorTestCase {
         TestReadActionListener fileSystemListener = new TestReadActionListener(latch);
         VFSClientConnector clientConnector =
                 connectorFactory.createVFSClientConnector(parameters, fileSystemListener);
-        RemoteFileSystemMessage message = new RemoteFileSystemMessage(ByteBuffer.wrap(newContent.getBytes()));
+        InputStream stream = new ByteArrayInputStream(newContent.getBytes(StandardCharsets.UTF_8));
+        RemoteFileSystemMessage message = new RemoteFileSystemMessage(stream);
         clientConnector.send(message);
         latch.await(3, TimeUnit.SECONDS);
         FileEntry entry = (FileEntry) fileSystem.getEntry("/home/wso2/file1.txt");
@@ -199,6 +214,11 @@ public class RemoteFileSystemClientConnectorTestCase {
         String fileContent = new BufferedReader(new InputStreamReader(inputStream)).lines().
                 collect(Collectors.joining("\n"));
         Assert.assertEquals(fileContent, content + newContent, "File content invalid.");
+        try {
+            stream.close();
+        } catch (IOException e) {
+            //Ignore the exception.
+        }
     }
 
     @Test(description = "Create new file.")
