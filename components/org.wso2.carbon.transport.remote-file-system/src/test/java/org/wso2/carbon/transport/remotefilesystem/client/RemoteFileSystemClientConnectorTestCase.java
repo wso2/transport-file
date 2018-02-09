@@ -41,6 +41,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
@@ -58,7 +59,7 @@ public class RemoteFileSystemClientConnectorTestCase {
     private int serverPort;
     private static String username = "wso2";
     private static String password = "wso2123";
-    private static String rootFolder = "/home/wso2";
+    private static String rootFolder = "/home/ballerina";
     private static String content = "Test String";
 
     @BeforeClass
@@ -68,12 +69,12 @@ public class RemoteFileSystemClientConnectorTestCase {
         ftpServer.addUserAccount(new UserAccount(username, password, rootFolder));
         fileSystem = new UnixFakeFileSystem();
         fileSystem.add(new DirectoryEntry(rootFolder));
-        fileSystem.add(new FileEntry("/home/wso2/file1.txt", content));
-        fileSystem.add(new FileEntry("/home/wso2/file10.txt", content));
-        fileSystem.add(new FileEntry("/home/wso2/file11.txt", content));
-        fileSystem.add(new FileEntry("/home/wso2/file2.txt"));
-        fileSystem.add(new DirectoryEntry("/home/wso2/move"));
-        fileSystem.add(new DirectoryEntry("/home/wso2/copy"));
+        fileSystem.add(new FileEntry("/home/ballerina/file1.txt", content));
+        fileSystem.add(new FileEntry("/home/ballerina/file10.txt", content));
+        fileSystem.add(new FileEntry("/home/ballerina/file11.txt", content));
+        fileSystem.add(new FileEntry("/home/ballerina/file2.txt"));
+        fileSystem.add(new DirectoryEntry("/home/ballerina/move"));
+        fileSystem.add(new DirectoryEntry("/home/ballerina/copy"));
         ftpServer.setFileSystem(fileSystem);
         ftpServer.start();
         serverPort = ftpServer.getServerControlPort();
@@ -134,7 +135,7 @@ public class RemoteFileSystemClientConnectorTestCase {
     }
 
     @Test(description = "Check file content.")
-    public void fileContentWriteTestCase() throws ServerConnectorException, InterruptedException {
+    public void fileContentWriteStreamTestCase() throws ServerConnectorException, InterruptedException {
         String newContent = "Sample text";
         Map<String, String> parameters = new HashMap<>();
         parameters.put(Constants.URI, buildConnectionURL() + "/file2.txt");
@@ -150,7 +151,7 @@ public class RemoteFileSystemClientConnectorTestCase {
         RemoteFileSystemMessage message = new RemoteFileSystemMessage(stream);
         clientConnector.send(message);
         latch.await(3, TimeUnit.SECONDS);
-        FileEntry entry = (FileEntry) fileSystem.getEntry("/home/wso2/file2.txt");
+        FileEntry entry = (FileEntry) fileSystem.getEntry("/home/ballerina/file2.txt");
         InputStream inputStream = entry.createInputStream();
         String fileContent = new BufferedReader(new InputStreamReader(inputStream)).lines().
                 collect(Collectors.joining("\n"));
@@ -160,6 +161,30 @@ public class RemoteFileSystemClientConnectorTestCase {
         } catch (IOException e) {
             //Ignore the exception.
         }
+    }
+
+    @Test(description = "Check file content.")
+    public void fileContentWriteByteBufferTestCase() throws ServerConnectorException, InterruptedException {
+        String newContent = "Sample text";
+        Map<String, String> parameters = new HashMap<>();
+        parameters.put(Constants.URI, buildConnectionURL() + "/file31.txt");
+        parameters.put(Constants.ACTION, Constants.WRITE);
+        parameters.put(Constants.PROTOCOL, Constants.PROTOCOL_FTP);
+        parameters.put(Constants.FTP_PASSIVE_MODE, Boolean.TRUE.toString());
+        CountDownLatch latch = new CountDownLatch(1);
+        RemoteFileSystemConnectorFactory connectorFactory = new RemoteFileSystemConnectorFactoryImpl();
+        TestReadActionListener fileSystemListener = new TestReadActionListener(latch);
+        VFSClientConnector clientConnector =
+                connectorFactory.createVFSClientConnector(parameters, fileSystemListener);
+        final ByteBuffer wrap = ByteBuffer.wrap(newContent.getBytes(StandardCharsets.UTF_8));
+        RemoteFileSystemMessage message = new RemoteFileSystemMessage(wrap);
+        clientConnector.send(message);
+        latch.await(3, TimeUnit.SECONDS);
+        FileEntry entry = (FileEntry) fileSystem.getEntry("/home/ballerina/file31.txt");
+        InputStream inputStream = entry.createInputStream();
+        String fileContent = new BufferedReader(new InputStreamReader(inputStream)).lines().
+                collect(Collectors.joining("\n"));
+        Assert.assertEquals(fileContent, newContent, "File content invalid.");
     }
 
     @Test(description = "Write content by creating new file")
@@ -179,7 +204,7 @@ public class RemoteFileSystemClientConnectorTestCase {
         RemoteFileSystemMessage message = new RemoteFileSystemMessage(stream);
         clientConnector.send(message);
         latch.await(3, TimeUnit.SECONDS);
-        FileEntry entry = (FileEntry) fileSystem.getEntry("/home/wso2/file4.txt");
+        FileEntry entry = (FileEntry) fileSystem.getEntry("/home/ballerina/file4.txt");
         InputStream inputStream = entry.createInputStream();
         String fileContent = new BufferedReader(new InputStreamReader(inputStream)).lines().
                 collect(Collectors.joining("\n"));
@@ -209,7 +234,7 @@ public class RemoteFileSystemClientConnectorTestCase {
         RemoteFileSystemMessage message = new RemoteFileSystemMessage(stream);
         clientConnector.send(message);
         latch.await(3, TimeUnit.SECONDS);
-        FileEntry entry = (FileEntry) fileSystem.getEntry("/home/wso2/file1.txt");
+        FileEntry entry = (FileEntry) fileSystem.getEntry("/home/ballerina/file1.txt");
         InputStream inputStream = entry.createInputStream();
         String fileContent = new BufferedReader(new InputStreamReader(inputStream)).lines().
                 collect(Collectors.joining("\n"));
@@ -316,7 +341,7 @@ public class RemoteFileSystemClientConnectorTestCase {
                 "Exception did not throw as expected.");
     }
 
-    @Test(description = "Copy file.", dependsOnMethods = "fileContentWriteTestCase")
+    @Test(description = "Copy file.", dependsOnMethods = "fileContentWriteStreamTestCase")
     public void fileCopyTestCase() throws ServerConnectorException, InterruptedException {
         Map<String, String> parameters = new HashMap<>();
         parameters.put(Constants.ACTION, Constants.COPY);
@@ -334,7 +359,7 @@ public class RemoteFileSystemClientConnectorTestCase {
         Assert.assertTrue(fileSystem.exists(rootFolder + "/copy/file2-copy.txt"), "File not copied.");
     }
 
-    @Test(description = "Copy non-exist file.", dependsOnMethods = "fileContentWriteTestCase")
+    @Test(description = "Copy non-exist file.", dependsOnMethods = "fileContentWriteStreamTestCase")
     public void copyNonExistFileTestCase() throws ServerConnectorException, InterruptedException {
         Map<String, String> parameters = new HashMap<>();
         parameters.put(Constants.ACTION, Constants.COPY);

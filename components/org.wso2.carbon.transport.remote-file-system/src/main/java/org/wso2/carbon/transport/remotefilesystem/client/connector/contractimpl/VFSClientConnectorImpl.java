@@ -39,6 +39,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
 import java.util.Map;
 
 /**
@@ -73,9 +74,11 @@ public class VFSClientConnectorImpl implements VFSClientConnector {
         String fileURI = connectorConfig.get(Constants.URI);
         String action = connectorConfig.get(Constants.ACTION);
         FileType fileType;
-        InputStream inputStream = null;
+        InputStream inputStream;
         OutputStream outputStream = null;
+        ByteBuffer byteBuffer;
         FileObject path = null;
+        boolean pathClose = true;
         try {
             FileSystemManager fsManager = VFS.getManager();
             path = fsManager.resolveFile(fileURI, opts);
@@ -100,14 +103,19 @@ public class VFSClientConnectorImpl implements VFSClientConnector {
                         fileType = path.getType();
                     }
                     if (fileType == FileType.FILE) {
-                        inputStream = message.getInputStream();
                         if (connectorConfig.get(Constants.APPEND) != null) {
                             outputStream = path.getContent().getOutputStream(
                                     Boolean.parseBoolean(connectorConfig.get(Constants.APPEND)));
                         } else {
                             outputStream = path.getContent().getOutputStream();
                         }
-                        outputStream.write(IOUtils.toByteArray(inputStream));
+                        inputStream = message.getInputStream();
+                        byteBuffer = message.getBytes();
+                        if (byteBuffer != null) {
+                            outputStream.write(byteBuffer.array());
+                        } else if (inputStream != null) {
+                            outputStream.write(IOUtils.toByteArray(inputStream));
+                        }
                         outputStream.flush();
                     }
                     break;
@@ -125,8 +133,8 @@ public class VFSClientConnectorImpl implements VFSClientConnector {
                 case Constants.COPY:
                     if (path.exists()) {
                         String destination = connectorConfig.get(Constants.DESTINATION);
-                        FileObject dest = fsManager.resolveFile(destination, opts);
-                        dest.copyFrom(path, Selectors.SELECT_ALL);
+                        FileObject fileObject = fsManager.resolveFile(destination, opts);
+                        fileObject.copyFrom(path, Selectors.SELECT_ALL);
                     } else {
                         throw new RemoteFileSystemConnectorException(
                                 "Failed to copy file: " + path.getName().getURI() + " not found");
@@ -154,10 +162,14 @@ public class VFSClientConnectorImpl implements VFSClientConnector {
                     break;
                 case Constants.READ:
                     if (path.exists()) {
-                        //TODO: Do not assume 'path' always refers to a file
                         inputStream = path.getContent().getInputStream();
-                        RemoteFileSystemMessage fileContent = new RemoteFileSystemMessage(inputStream);
+                        FileObjectInputStream objectInputStream = new FileObjectInputStream(inputStream, path);
+                        RemoteFileSystemMessage fileContent = new RemoteFileSystemMessage(objectInputStream);
                         remoteFileSystemListener.onMessage(fileContent);
+                        // We can't close the FileObject or InputStream at the end. This InputStream will pass to upper
+                        // layer and stream need to close from there once the usage is done. Along with that need to
+                        // close the FileObject. If we close the FileObject now then InputStream will not get any data.
+                        pathClose = false;
                     } else {
                         throw new RemoteFileSystemConnectorException(
                                 "Failed to read file: " + path.getName().getURI() + " not found");
@@ -174,14 +186,13 @@ public class VFSClientConnectorImpl implements VFSClientConnector {
         } catch (RemoteFileSystemConnectorException | IOException e) {
             remoteFileSystemListener.onError(e);
         } finally {
-            if (path != null) {
+            if (path != null && pathClose) {
                 try {
                     path.close();
                 } catch (FileSystemException e) {
                     //Do nothing.
                 }
             }
-            closeQuietly(inputStream);
             closeQuietly(outputStream);
         }
     }

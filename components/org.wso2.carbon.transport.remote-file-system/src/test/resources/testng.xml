@@ -19,7 +19,7 @@
   -->
 
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
-<suite name="Transport test Suite">
+<suite name="Transport test Suite" parallel="false">
 
     <test name="Transport test">
         <classes>

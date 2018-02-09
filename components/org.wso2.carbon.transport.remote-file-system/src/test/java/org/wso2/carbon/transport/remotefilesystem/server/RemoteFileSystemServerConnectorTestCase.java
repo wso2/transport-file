@@ -87,9 +87,10 @@ public class RemoteFileSystemServerConnectorTestCase {
         }
         Assert.assertEquals(eventList.size(), expectedEventCount, "Generated events count mismatch " +
                 "with the expected.");
-        Assert.assertTrue(eventList.contains(buildConnectionURL() + "/exe/run.exe"));
-        Assert.assertTrue(eventList.contains(buildConnectionURL() + "/file1.txt"));
-        Assert.assertTrue(eventList.contains(buildConnectionURL() + "/file2.txt"));
+        Assert.assertTrue(eventList.contains(buildConnectionURL() + "/exe/run.exe"), "run.exe didn't received.");
+        Assert.assertTrue(eventList.contains(buildConnectionURL() + "/file1.txt"), "file1 didn't received.");
+        Assert.assertTrue(eventList.contains(buildConnectionURL() + "/file2.txt"), "file2 didn't received.");
+        fileSystem.delete("/home/wso2/file2.txt");
         testConnector.stop();
     }
 
@@ -114,8 +115,8 @@ public class RemoteFileSystemServerConnectorTestCase {
         }
         Assert.assertEquals(eventList.size(), expectedEventCount, "Generated events count mismatch " +
                 "with the expected.");
-        Assert.assertTrue(eventList.contains(buildConnectionURL() + "/exe/run.exe"));
-        Assert.assertTrue(eventList.contains(buildConnectionURL() + "/file1.txt"));
+        Assert.assertTrue(eventList.contains(buildConnectionURL() + "/exe/run.exe"), "run.exe didn't received.");
+        Assert.assertTrue(eventList.contains(buildConnectionURL() + "/file1.txt"), "file1 didn't received.");
         testConnector.stop();
     }
 

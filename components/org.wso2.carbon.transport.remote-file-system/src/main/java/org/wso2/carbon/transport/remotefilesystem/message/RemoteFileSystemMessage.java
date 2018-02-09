@@ -19,14 +19,20 @@
 package org.wso2.carbon.transport.remotefilesystem.message;
 
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 
 /**
  * This represent the message that hold payload and other attributes.
  */
 public class RemoteFileSystemMessage extends RemoteFileSystemBaseMessage {
 
+    private ByteBuffer bytes;
     private InputStream inputStream;
     private String text;
+
+    public RemoteFileSystemMessage(ByteBuffer bytes) {
+        this.bytes = bytes;
+    }
 
     public RemoteFileSystemMessage(InputStream inputStream) {
         this.inputStream = inputStream;
@@ -34,6 +40,10 @@ public class RemoteFileSystemMessage extends RemoteFileSystemBaseMessage {
 
     public RemoteFileSystemMessage(String text) {
         this.text = text;
+    }
+
+    public ByteBuffer getBytes() {
+        return bytes;
     }
 
     public InputStream getInputStream() {
