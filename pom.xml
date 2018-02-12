@@ -24,10 +24,10 @@
         <version>5</version>
     </parent>
     <packaging>pom</packaging>
-    <groupId>org.wso2.carbon.transport</groupId>
-    <artifactId>org.wso2.carbon.transport.file.parent</artifactId>
+    <groupId>org.wso2.carbon.transport.file</groupId>
+    <artifactId>file-parent</artifactId>
     <version>6.0.50-SNAPSHOT</version>
-    <name>WSO2 Carbon Transport Parent</name>
+    <name>WSO2 Carbon Transport File Parent</name>
 
     <modules>
         <module>components/org.wso2.carbon.transport.file</module>
@@ -82,7 +82,7 @@
                 <version>${jsch.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.wso2.carbon.transport</groupId>
+                <groupId>org.wso2.carbon.transport.file</groupId>
                 <artifactId>org.wso2.carbon.transport.file</artifactId>
                 <version>${project.version}</version>
             </dependency>
