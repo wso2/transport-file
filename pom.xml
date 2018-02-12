@@ -24,16 +24,16 @@
         <version>5</version>
     </parent>
     <packaging>pom</packaging>
-    <groupId>org.wso2.carbon.transport</groupId>
-    <artifactId>org.wso2.carbon.transport.file.parent</artifactId>
+    <groupId>org.wso2.transport.file</groupId>
+    <artifactId>file-parent</artifactId>
     <version>6.0.50-SNAPSHOT</version>
-    <name>WSO2 Carbon Transport Parent</name>
+    <name>WSO2 Transport File Parent</name>
 
     <modules>
-        <module>components/org.wso2.carbon.transport.file</module>
-        <module>components/org.wso2.carbon.transport.local-file-system</module>
-        <module>components/org.wso2.carbon.transport.remote-file-system</module>
-        <module>features/org.wso2.carbon.transport.file.feature</module>
+        <module>components/org.wso2.transport.file</module>
+        <module>components/org.wso2.transport.local-file-system</module>
+        <module>components/org.wso2.transport.remote-file-system</module>
+        <module>features/org.wso2.transport.file.feature</module>
     </modules>
 
     <scm>
@@ -82,8 +82,8 @@
                 <version>${jsch.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.wso2.carbon.transport</groupId>
-                <artifactId>org.wso2.carbon.transport.file</artifactId>
+                <groupId>org.wso2.transport.file</groupId>
+                <artifactId>org.wso2.transport.file</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
