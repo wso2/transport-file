@@ -18,6 +18,7 @@
 
 package org.wso2.carbon.transport.remotefilesystem.client.connector.contractimpl;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
 import org.apache.commons.vfs2.FileSystemManager;
@@ -34,7 +35,6 @@ import org.wso2.carbon.transport.remotefilesystem.exception.RemoteFileSystemConn
 import org.wso2.carbon.transport.remotefilesystem.listener.RemoteFileSystemListener;
 import org.wso2.carbon.transport.remotefilesystem.message.RemoteFileSystemMessage;
 
-import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -74,10 +74,11 @@ public class VFSClientConnectorImpl implements VFSClientConnector {
         String fileURI = connectorConfig.get(Constants.URI);
         String action = connectorConfig.get(Constants.ACTION);
         FileType fileType;
-        ByteBuffer byteBuffer;
-        InputStream inputStream = null;
+        InputStream inputStream;
         OutputStream outputStream = null;
+        ByteBuffer byteBuffer;
         FileObject path = null;
+        boolean pathClose = true;
         try {
             FileSystemManager fsManager = VFS.getManager();
             path = fsManager.resolveFile(fileURI, opts);
@@ -102,15 +103,19 @@ public class VFSClientConnectorImpl implements VFSClientConnector {
                         fileType = path.getType();
                     }
                     if (fileType == FileType.FILE) {
-                        byteBuffer = message.getBytes();
-                        byte[] bytes = byteBuffer.array();
                         if (connectorConfig.get(Constants.APPEND) != null) {
                             outputStream = path.getContent().getOutputStream(
                                     Boolean.parseBoolean(connectorConfig.get(Constants.APPEND)));
                         } else {
                             outputStream = path.getContent().getOutputStream();
                         }
-                        outputStream.write(bytes);
+                        inputStream = message.getInputStream();
+                        byteBuffer = message.getBytes();
+                        if (byteBuffer != null) {
+                            outputStream.write(byteBuffer.array());
+                        } else if (inputStream != null) {
+                            outputStream.write(IOUtils.toByteArray(inputStream));
+                        }
                         outputStream.flush();
                     }
                     break;
@@ -128,8 +133,8 @@ public class VFSClientConnectorImpl implements VFSClientConnector {
                 case Constants.COPY:
                     if (path.exists()) {
                         String destination = connectorConfig.get(Constants.DESTINATION);
-                        FileObject dest = fsManager.resolveFile(destination, opts);
-                        dest.copyFrom(path, Selectors.SELECT_ALL);
+                        FileObject fileObject = fsManager.resolveFile(destination, opts);
+                        fileObject.copyFrom(path, Selectors.SELECT_ALL);
                     } else {
                         throw new RemoteFileSystemConnectorException(
                                 "Failed to copy file: " + path.getName().getURI() + " not found");
@@ -157,11 +162,14 @@ public class VFSClientConnectorImpl implements VFSClientConnector {
                     break;
                 case Constants.READ:
                     if (path.exists()) {
-                        //TODO: Do not assume 'path' always refers to a file
                         inputStream = path.getContent().getInputStream();
-                        byte[] bytes = toByteArray(inputStream);
-                        RemoteFileSystemMessage fileContent = new RemoteFileSystemMessage(ByteBuffer.wrap(bytes));
+                        FileObjectInputStream objectInputStream = new FileObjectInputStream(inputStream, path);
+                        RemoteFileSystemMessage fileContent = new RemoteFileSystemMessage(objectInputStream);
                         remoteFileSystemListener.onMessage(fileContent);
+                        // We can't close the FileObject or InputStream at the end. This InputStream will pass to upper
+                        // layer and stream need to close from there once the usage is done. Along with that need to
+                        // close the FileObject. If we close the FileObject now then InputStream will not get any data.
+                        pathClose = false;
                     } else {
                         throw new RemoteFileSystemConnectorException(
                                 "Failed to read file: " + path.getName().getURI() + " not found");
@@ -178,39 +186,15 @@ public class VFSClientConnectorImpl implements VFSClientConnector {
         } catch (RemoteFileSystemConnectorException | IOException e) {
             remoteFileSystemListener.onError(e);
         } finally {
-            if (path != null) {
+            if (path != null && pathClose) {
                 try {
                     path.close();
                 } catch (FileSystemException e) {
                     //Do nothing.
                 }
             }
-            closeQuietly(inputStream);
             closeQuietly(outputStream);
         }
-    }
-
-    /**
-     * Obtain a byte[] from an input stream
-     *
-     * @param input The input stream that the data should be obtained from
-     * @return byte[] The byte array of data obtained from the input stream
-     * @throws IOException if something happen during the content read
-     */
-    private static byte[] toByteArray(InputStream input) throws IOException {
-        long count = 0L;
-        byte[] buffer = new byte[4096];
-        int n1;
-        ByteArrayOutputStream output = new ByteArrayOutputStream();
-        for (; -1 != (n1 = input.read(buffer)); count += (long) n1) {
-            output.write(buffer, 0, n1);
-        }
-        if (logger.isDebugEnabled()) {
-            logger.debug(count + " bytes read");
-        }
-        byte[] bytes = output.toByteArray();
-        closeQuietly(output);
-        return bytes;
     }
 
     /**
