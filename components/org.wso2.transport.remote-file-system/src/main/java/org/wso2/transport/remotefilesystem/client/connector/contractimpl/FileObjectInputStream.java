@@ -44,4 +44,12 @@ public class FileObjectInputStream extends MonitorInputStream {
             path.close();
         }
     }
+
+    @Override
+    protected void onClose() throws IOException {
+        super.onClose();
+        if (path != null) {
+            path.close();
+        }
+    }
 }
