@@ -18,7 +18,6 @@
 
 package org.wso2.transport.remotefilesystem.client.connector.contractimpl;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
 import org.apache.commons.vfs2.FileSystemManager;
@@ -114,7 +113,11 @@ public class VFSClientConnectorImpl implements VFSClientConnector {
                         if (byteBuffer != null) {
                             outputStream.write(byteBuffer.array());
                         } else if (inputStream != null) {
-                            outputStream.write(IOUtils.toByteArray(inputStream));
+                            int n;
+                            byte[] buffer = new byte[16384];
+                            while ((n = inputStream.read(buffer)) > -1) {
+                                outputStream.write(buffer, 0, n);
+                            }
                         }
                         outputStream.flush();
                     }
