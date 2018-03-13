@@ -92,6 +92,7 @@ public class RemoteFileSystemConsumer {
             // TODO: Make this and other file related configurations configurable
             if (options != null && Constants.SCHEME_FTP.equals(options.get(Constants.SCHEME))) {
                 FtpFileSystemConfigBuilder.getInstance().setPassiveMode(fso, true);
+                FtpFileSystemConfigBuilder.getInstance().setUserDirIsRoot(fso, false);
             }
             listeningDir = fsManager.resolveFile(listeningDirURI, fso);
             if (!listeningDir.isWriteable()) {
