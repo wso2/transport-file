@@ -69,7 +69,8 @@ public class VFSClientConnectorImpl implements VFSClientConnector {
 
     @Override
     public void send(RemoteFileSystemMessage message) {
-        FtpFileSystemConfigBuilder.getInstance().setPassiveMode(opts, true);
+//        FtpFileSystemConfigBuilder.getInstance().setPassiveMode(opts, true);
+        FtpFileSystemConfigBuilder.getInstance().setUserDirIsRoot(opts, false);
         String fileURI = connectorConfig.get(Constants.URI);
         String action = connectorConfig.get(Constants.ACTION);
         FileType fileType;

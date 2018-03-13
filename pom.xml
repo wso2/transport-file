@@ -71,7 +71,7 @@
                 <version>${carbon.messaging.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.apache.commons.wso2</groupId>
+                <groupId>org.wso2.org.apache.commons</groupId>
                 <artifactId>commons-vfs2</artifactId>
                 <version>${commons-vfs2.wso2.version}</version>
             </dependency>
@@ -188,7 +188,7 @@
         <javax.xml.validation.import.version.range>[0.0.0, 1.0.0)</javax.xml.validation.import.version.range>
         <javax.net.ssl.import.version.range>[0.0.0, 1.0.0)</javax.net.ssl.import.version.range>
 
-        <commons-vfs2.wso2.version>2.0-wso2v15</commons-vfs2.wso2.version>
+        <commons-vfs2.wso2.version>2.2-wso2v1</commons-vfs2.wso2.version>
         <commons-vfs2.wso2.version.range>[2.0.0, 3.0.0)</commons-vfs2.wso2.version.range>
         <commons-net.version>3.6</commons-net.version>
         <commons-io.wso2.version>2.4.0.wso2v1</commons-io.wso2.version>
