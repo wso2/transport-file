@@ -26,6 +26,7 @@ import org.apache.commons.vfs2.FileType;
 import org.apache.commons.vfs2.Selectors;
 import org.apache.commons.vfs2.VFS;
 import org.apache.commons.vfs2.provider.ftp.FtpFileSystemConfigBuilder;
+import org.apache.commons.vfs2.provider.sftp.SftpFileSystemConfigBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wso2.transport.remotefilesystem.Constants;
@@ -71,6 +72,8 @@ public class VFSClientConnectorImpl implements VFSClientConnector {
     public void send(RemoteFileSystemMessage message) {
 //        FtpFileSystemConfigBuilder.getInstance().setPassiveMode(opts, true);
         FtpFileSystemConfigBuilder.getInstance().setUserDirIsRoot(opts, false);
+        SftpFileSystemConfigBuilder.getInstance().setUserDirIsRoot(opts, false);
+        SftpFileSystemConfigBuilder.getInstance().setAvoidPermissionCheck(opts, "true");
         String fileURI = connectorConfig.get(Constants.URI);
         String action = connectorConfig.get(Constants.ACTION);
         FileType fileType;
@@ -137,33 +140,40 @@ public class VFSClientConnectorImpl implements VFSClientConnector {
                 case Constants.COPY:
                     if (path.exists()) {
                         String destination = connectorConfig.get(Constants.DESTINATION);
-                        FileObject fileObject = fsManager.resolveFile(destination, opts);
-                        fileObject.copyFrom(path, Selectors.SELECT_ALL);
+                        try (FileObject fileObject = fsManager.resolveFile(destination, opts)) {
+                            fileObject.copyFrom(path, Selectors.SELECT_ALL);
+                        }
                     } else {
                         throw new RemoteFileSystemConnectorException(
                                 "Failed to copy file: " + path.getName().getURI() + " not found");
                     }
                     break;
-                case Constants.MOVE:
-                    if (path.exists()) {
-                        //TODO: Improve this to fix issue #331
-                        String destination = connectorConfig.get(Constants.DESTINATION);
-                        FileObject newPath = fsManager.resolveFile(destination, opts);
-                        FileObject parent = newPath.getParent();
-                        if (parent != null && !parent.exists()) {
-                            parent.createFolder();
+            case Constants.MOVE:
+                if (path.exists()) {
+                    //TODO: Improve this to fix issue #331
+                    String destination = connectorConfig.get(Constants.DESTINATION);
+                    try (FileObject newPath = fsManager.resolveFile(destination, opts);
+                            FileObject parent = newPath.getParent()) {
+                        if (parent != null) {
+                            if (!parent.exists()) {
+                                parent.createFolder();
+                            }
+                            try (FileObject finalPath = parent.resolveFile(newPath.getName().getBaseName())) {
+                                if (!finalPath.exists()) {
+                                    path.moveTo(finalPath);
+                                } else {
+                                    throw new RemoteFileSystemConnectorException(
+                                            "The file at " + newPath.getURL().toString()
+                                                    + " already exists or it is a directory");
+                                }
+                            }
                         }
-                        if (!newPath.exists()) {
-                            path.moveTo(newPath);
-                        } else {
-                            throw new RemoteFileSystemConnectorException("The file at " + newPath.getURL().toString() +
-                                    " already exists or it is a directory");
-                        }
-                    } else {
-                        throw new RemoteFileSystemConnectorException(
-                                "Failed to move file: " + path.getName().getURI() + " not found");
                     }
-                    break;
+                } else {
+                    throw new RemoteFileSystemConnectorException(
+                            "Failed to move file: " + path.getName().getURI() + " not found");
+                }
+                break;
                 case Constants.READ:
                     if (path.exists()) {
                         inputStream = path.getContent().getInputStream();

@@ -53,7 +53,7 @@ public class RemoteFileSystemConsumer {
     private static final Logger log = LoggerFactory.getLogger(RemoteFileSystemConsumer.class);
 
     private Map<String, String> fileProperties;
-    private FileSystemManager fsManager = null;
+    private FileSystemManager fsManager;
     private String serviceName;
     private RemoteFileSystemListener remoteFileSystemListener;
     private String listeningDirURI; // The URI of the currently listening directory

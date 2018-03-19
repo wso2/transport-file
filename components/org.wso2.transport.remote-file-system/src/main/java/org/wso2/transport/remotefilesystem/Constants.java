@@ -23,10 +23,6 @@ package org.wso2.transport.remotefilesystem;
  */
 public final class Constants {
 
-    // meta data of the file
-    public static final String META_FILE_SIZE = "file-size";
-    public static final String META_FILE_LAST_MODIFIED_TIME = "last-modified-time";
-
     public static final String TRANSPORT_FILE_URI = "dirURI";
     public static final String FILE_SORT_PARAM = "fileSortAttribute";
     public static final String FILE_SORT_VALUE_NAME = "name";
@@ -87,7 +83,8 @@ public final class Constants {
     public enum SftpFileOption {
         Identities,
         UserDirIsRoot,
-        IdentityPassPhrase;
+        IdentityPassPhrase,
+        Avoidpermissioncheck;
 
         SftpFileOption() {
         }

@@ -58,7 +58,7 @@ public class FileTransportUtils {
     public static FileSystemOptions attachFileSystemOptions(Map<String, String> options, FileSystemManager fsManager)
             throws RemoteFileSystemConnectorException {
         if (options == null) {
-            return null;    //returning null as this is not an erroneous case.
+            return null;
         }
         FileSystemOptions opts = new FileSystemOptions();
         DelegatingFileSystemOptionsBuilder delegate = new DelegatingFileSystemOptionsBuilder(fsManager);
