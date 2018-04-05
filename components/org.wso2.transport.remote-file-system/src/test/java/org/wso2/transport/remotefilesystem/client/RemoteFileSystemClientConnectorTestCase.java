@@ -323,45 +323,6 @@ public class RemoteFileSystemClientConnectorTestCase {
                 "Exception did not throw as expected.");
     }
 
-//    @Test(description = "Copy file.", dependsOnMethods = "fileContentWriteStreamTestCase")
-//    public void fileCopyTestCase() throws ServerConnectorException, InterruptedException {
-//        Map<String, String> parameters = new HashMap<>();
-//        parameters.put(Constants.ACTION, Constants.COPY);
-//        parameters.put(Constants.URI, buildConnectionURL() + "/file2.txt");
-//        parameters.put(Constants.DESTINATION, buildConnectionURL() + "/copy/file2-copy.txt");
-//        parameters.put(Constants.PROTOCOL, Constants.PROTOCOL_FTP);
-//        parameters.put(Constants.FTP_PASSIVE_MODE, Boolean.TRUE.toString());
-//        CountDownLatch latch = new CountDownLatch(1);
-//        RemoteFileSystemConnectorFactory connectorFactory = new RemoteFileSystemConnectorFactoryImpl();
-//        TestClientRemoteFileSystemListener fileSystemListener = new TestClientRemoteFileSystemListener(latch);
-//        VFSClientConnector clientConnector =
-//                connectorFactory.createVFSClientConnector(parameters, fileSystemListener);
-//        clientConnector.send(null);
-//        latch.await(3, TimeUnit.SECONDS);
-//        Assert.assertTrue(fileSystem.exists(rootFolder + "/copy/file2-copy.txt"), "File not copied.");
-//    }
-
-//    @Test(description = "Copy non-exist file.", dependsOnMethods = "fileContentWriteStreamTestCase")
-//    public void copyNonExistFileTestCase() throws ServerConnectorException, InterruptedException {
-//        Map<String, String> parameters = new HashMap<>();
-//        parameters.put(Constants.ACTION, Constants.COPY);
-//        parameters.put(Constants.URI, buildConnectionURL() + "/non-exist.txt");
-//        parameters.put(Constants.DESTINATION, buildConnectionURL() + "/copy/file2-non-copy.txt");
-//        parameters.put(Constants.PROTOCOL, Constants.PROTOCOL_FTP);
-//        parameters.put(Constants.FTP_PASSIVE_MODE, Boolean.TRUE.toString());
-//        CountDownLatch latch = new CountDownLatch(1);
-//        RemoteFileSystemConnectorFactory connectorFactory = new RemoteFileSystemConnectorFactoryImpl();
-//        TestClientRemoteFileSystemListener fileSystemListener = new TestClientRemoteFileSystemListener(latch);
-//        VFSClientConnector clientConnector =
-//                connectorFactory.createVFSClientConnector(parameters, fileSystemListener);
-//        clientConnector.send(null);
-//        latch.await(3, TimeUnit.SECONDS);
-//        Assert.assertTrue(fileSystemListener.getThrowable() instanceof RemoteFileSystemConnectorException,
-//                "Exception did not throw as expected.");
-//        Assert.assertFalse(fileSystem.exists(rootFolder + "/copy/file2-non-copy.txt"),
-//                "Non exist file copied.");
-//    }
-
     @Test(description = "File move.")
     public void fileMoveTestCase() throws ServerConnectorException, InterruptedException {
         Map<String, String> parameters = new HashMap<>();
