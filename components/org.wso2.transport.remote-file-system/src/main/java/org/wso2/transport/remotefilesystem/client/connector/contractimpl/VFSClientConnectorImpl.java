@@ -22,10 +22,10 @@ import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
 import org.apache.commons.vfs2.FileSystemManager;
 import org.apache.commons.vfs2.FileSystemOptions;
-import org.apache.commons.vfs2.FileType;
 import org.apache.commons.vfs2.Selectors;
 import org.apache.commons.vfs2.VFS;
 import org.apache.commons.vfs2.provider.ftp.FtpFileSystemConfigBuilder;
+import org.apache.commons.vfs2.provider.sftp.SftpFileSystemConfigBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wso2.transport.remotefilesystem.Constants;
@@ -53,7 +53,7 @@ public class VFSClientConnectorImpl implements VFSClientConnector {
     private FileSystemOptions opts = new FileSystemOptions();
 
     public VFSClientConnectorImpl(Map<String, String> connectorConfig,
-                                  RemoteFileSystemListener remoteFileSystemListener) {
+            RemoteFileSystemListener remoteFileSystemListener) {
         this.connectorConfig = connectorConfig;
         this.remoteFileSystemListener = remoteFileSystemListener;
 
@@ -69,11 +69,12 @@ public class VFSClientConnectorImpl implements VFSClientConnector {
 
     @Override
     public void send(RemoteFileSystemMessage message) {
-//        FtpFileSystemConfigBuilder.getInstance().setPassiveMode(opts, true);
+        //        FtpFileSystemConfigBuilder.getInstance().setPassiveMode(opts, true);
         FtpFileSystemConfigBuilder.getInstance().setUserDirIsRoot(opts, false);
+        SftpFileSystemConfigBuilder.getInstance().setUserDirIsRoot(opts, false);
+        SftpFileSystemConfigBuilder.getInstance().setAvoidPermissionCheck(opts, "true");
         String fileURI = connectorConfig.get(Constants.URI);
         String action = connectorConfig.get(Constants.ACTION);
-        FileType fileType;
         InputStream inputStream;
         OutputStream outputStream = null;
         ByteBuffer byteBuffer;
@@ -82,109 +83,116 @@ public class VFSClientConnectorImpl implements VFSClientConnector {
         try {
             FileSystemManager fsManager = VFS.getManager();
             path = fsManager.resolveFile(fileURI, opts);
-            fileType = path.getType();
             switch (action) {
-                case Constants.CREATE:
-                    boolean isFolder = Boolean.parseBoolean(connectorConfig.getOrDefault(Constants.CREATE_FOLDER,
-                            "false"));
-                    if (path.exists()) {
-                        throw new RemoteFileSystemConnectorException("File already exists: " + path.getName().getURI());
+            case Constants.MKDIR:
+                if (path.exists()) {
+                    throw new RemoteFileSystemConnectorException("Directory exists: " + path.getName().getURI());
+                }
+                path.createFolder();
+                break;
+            case Constants.PUT:
+                if (!path.exists()) {
+                    path.createFile();
+                    path.refresh();
+                }
+                if (connectorConfig.get(Constants.APPEND) != null) {
+                    outputStream = path.getContent()
+                            .getOutputStream(Boolean.parseBoolean(connectorConfig.get(Constants.APPEND)));
+                } else {
+                    outputStream = path.getContent().getOutputStream();
+                }
+                inputStream = message.getInputStream();
+                byteBuffer = message.getBytes();
+                if (byteBuffer != null) {
+                    outputStream.write(byteBuffer.array());
+                } else if (inputStream != null) {
+                    int n;
+                    byte[] buffer = new byte[16384];
+                    while ((n = inputStream.read(buffer)) > -1) {
+                        outputStream.write(buffer, 0, n);
                     }
-                    if (isFolder) {
-                        path.createFolder();
-                    } else {
-                        path.createFile();
+                }
+                outputStream.flush();
+                break;
+            case Constants.DELETE:
+                if (path.exists()) {
+                    int filesDeleted = path.delete(Selectors.SELECT_SELF);
+                    if (logger.isDebugEnabled()) {
+                        logger.debug(filesDeleted + " files successfully deleted");
                     }
-                    break;
-                case Constants.WRITE:
-                    if (!path.exists()) {
-                        path.createFile();
-                        path.refresh();
-                        fileType = path.getType();
+                } else {
+                    throw new RemoteFileSystemConnectorException(
+                            "Failed to delete file: " + path.getName().getURI() + " not found");
+                }
+                break;
+            case Constants.RMDIR:
+                if (path.exists()) {
+                    int filesDeleted = path.delete(Selectors.SELECT_ALL);
+                    if (logger.isDebugEnabled()) {
+                        logger.debug(filesDeleted + " files successfully deleted");
                     }
-                    if (fileType == FileType.FILE) {
-                        if (connectorConfig.get(Constants.APPEND) != null) {
-                            outputStream = path.getContent().getOutputStream(
-                                    Boolean.parseBoolean(connectorConfig.get(Constants.APPEND)));
-                        } else {
-                            outputStream = path.getContent().getOutputStream();
-                        }
-                        inputStream = message.getInputStream();
-                        byteBuffer = message.getBytes();
-                        if (byteBuffer != null) {
-                            outputStream.write(byteBuffer.array());
-                        } else if (inputStream != null) {
-                            int n;
-                            byte[] buffer = new byte[16384];
-                            while ((n = inputStream.read(buffer)) > -1) {
-                                outputStream.write(buffer, 0, n);
+                } else {
+                    throw new RemoteFileSystemConnectorException(
+                            "Failed to delete directory: " + path.getName().getURI() + " not found");
+                }
+                break;
+            case Constants.RENAME:
+                if (path.exists()) {
+                    //TODO: Improve this to fix issue #331
+                    String destination = connectorConfig.get(Constants.DESTINATION);
+                    try (FileObject newPath = fsManager.resolveFile(destination, opts);
+                            FileObject parent = newPath.getParent()) {
+                        if (parent != null) {
+                            if (!parent.exists()) {
+                                parent.createFolder();
+                            }
+                            try (FileObject finalPath = parent.resolveFile(newPath.getName().getBaseName())) {
+                                if (!finalPath.exists()) {
+                                    path.moveTo(finalPath);
+                                } else {
+                                    throw new RemoteFileSystemConnectorException(
+                                            "The file at " + newPath.getURL().toString()
+                                                    + " already exists or it is a directory");
+                                }
                             }
                         }
-                        outputStream.flush();
                     }
-                    break;
-                case Constants.DELETE:
-                    if (path.exists()) {
-                        int filesDeleted = path.delete(Selectors.SELECT_ALL);
-                        if (logger.isDebugEnabled()) {
-                            logger.debug(filesDeleted + " files successfully deleted");
-                        }
-                    } else {
-                        throw new RemoteFileSystemConnectorException(
-                                "Failed to delete file: " + path.getName().getURI() + " not found");
-                    }
-                    break;
-                case Constants.COPY:
-                    if (path.exists()) {
-                        String destination = connectorConfig.get(Constants.DESTINATION);
-                        FileObject fileObject = fsManager.resolveFile(destination, opts);
-                        fileObject.copyFrom(path, Selectors.SELECT_ALL);
-                    } else {
-                        throw new RemoteFileSystemConnectorException(
-                                "Failed to copy file: " + path.getName().getURI() + " not found");
-                    }
-                    break;
-                case Constants.MOVE:
-                    if (path.exists()) {
-                        //TODO: Improve this to fix issue #331
-                        String destination = connectorConfig.get(Constants.DESTINATION);
-                        FileObject newPath = fsManager.resolveFile(destination, opts);
-                        FileObject parent = newPath.getParent();
-                        if (parent != null && !parent.exists()) {
-                            parent.createFolder();
-                        }
-                        if (!newPath.exists()) {
-                            path.moveTo(newPath);
-                        } else {
-                            throw new RemoteFileSystemConnectorException("The file at " + newPath.getURL().toString() +
-                                    " already exists or it is a directory");
-                        }
-                    } else {
-                        throw new RemoteFileSystemConnectorException(
-                                "Failed to move file: " + path.getName().getURI() + " not found");
-                    }
-                    break;
-                case Constants.READ:
-                    if (path.exists()) {
-                        inputStream = path.getContent().getInputStream();
-                        FileObjectInputStream objectInputStream = new FileObjectInputStream(inputStream, path);
-                        RemoteFileSystemMessage fileContent = new RemoteFileSystemMessage(objectInputStream);
-                        remoteFileSystemListener.onMessage(fileContent);
-                        // We can't close the FileObject or InputStream at the end. This InputStream will pass to upper
-                        // layer and stream need to close from there once the usage is done. Along with that need to
-                        // close the FileObject. If we close the FileObject now then InputStream will not get any data.
-                        pathClose = false;
-                    } else {
-                        throw new RemoteFileSystemConnectorException(
-                                "Failed to read file: " + path.getName().getURI() + " not found");
-                    }
-                    break;
-                case Constants.EXISTS:
-                    RemoteFileSystemMessage fileContent = new RemoteFileSystemMessage(Boolean.toString(path.exists()));
+                } else {
+                    throw new RemoteFileSystemConnectorException(
+                            "Failed to rename file: " + path.getName().getURI() + " not found");
+                }
+                break;
+            case Constants.GET:
+                if (path.exists()) {
+                    inputStream = path.getContent().getInputStream();
+                    FileObjectInputStream objectInputStream = new FileObjectInputStream(inputStream, path);
+                    RemoteFileSystemMessage fileContent = new RemoteFileSystemMessage(objectInputStream);
                     remoteFileSystemListener.onMessage(fileContent);
-                    break;
-                default:
-                    break;
+                    // We can't close the FileObject or InputStream at the end. This InputStream will pass to upper
+                    // layer and stream need to close from there once the usage is done. Along with that need to
+                    // close the FileObject. If we close the FileObject now then InputStream will not get any data.
+                    pathClose = false;
+                } else {
+                    throw new RemoteFileSystemConnectorException(
+                            "Failed to read file: " + path.getName().getURI() + " not found");
+                }
+                break;
+            case Constants.SIZE:
+                RemoteFileSystemMessage fileSize = new RemoteFileSystemMessage(path.getContent().getSize());
+                remoteFileSystemListener.onMessage(fileSize);
+                break;
+            case Constants.LIST:
+                final FileObject[] pathObjects = path.getChildren();
+                String[] childrenNames = new String[pathObjects.length];
+                int i = 0;
+                for (FileObject child : pathObjects) {
+                    childrenNames[i++] = child.getName().getURI();
+                }
+                RemoteFileSystemMessage children = new RemoteFileSystemMessage(childrenNames);
+                remoteFileSystemListener.onMessage(children);
+                break;
+            default:
+                break;
             }
             remoteFileSystemListener.done();
         } catch (RemoteFileSystemConnectorException | IOException e) {

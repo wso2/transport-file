@@ -23,10 +23,6 @@ package org.wso2.transport.remotefilesystem;
  */
 public final class Constants {
 
-    // meta data of the file
-    public static final String META_FILE_SIZE = "file-size";
-    public static final String META_FILE_LAST_MODIFIED_TIME = "last-modified-time";
-
     public static final String TRANSPORT_FILE_URI = "dirURI";
     public static final String FILE_SORT_PARAM = "fileSortAttribute";
     public static final String FILE_SORT_VALUE_NAME = "name";
@@ -62,16 +58,19 @@ public final class Constants {
 
     public static final String PROTOCOL_FTP = "ftp";
 
-    public static final String APPEND = "append";
     public static final String URI = "uri";
     public static final String ACTION = "action";
-    public static final String CREATE = "create";
-    public static final String WRITE = "write";
+
+    public static final String APPEND = "append";
+    public static final String MKDIR = "mkdir";
+    public static final String RMDIR = "rmdir";
+    public static final String PUT = "put";
+    public static final String GET = "get";
     public static final String DELETE = "delete";
-    public static final String COPY = "copy";
-    public static final String MOVE = "move";
-    public static final String READ = "read";
-    public static final String EXISTS = "exists";
+    public static final String RENAME = "rename";
+    public static final String SIZE = "size";
+    public static final String LIST = "list";
+
 
     public static final String FTP_PASSIVE_MODE = "FTP_PASSIVE_MODE";
     public static final String PROTOCOL = "PROTOCOL";
@@ -87,7 +86,8 @@ public final class Constants {
     public enum SftpFileOption {
         Identities,
         UserDirIsRoot,
-        IdentityPassPhrase;
+        IdentityPassPhrase,
+        AvoidPermissionCheck;
 
         SftpFileOption() {
         }

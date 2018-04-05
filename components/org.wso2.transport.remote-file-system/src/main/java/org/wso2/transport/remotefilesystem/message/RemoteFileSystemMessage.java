@@ -29,6 +29,8 @@ public class RemoteFileSystemMessage extends RemoteFileSystemBaseMessage {
     private ByteBuffer bytes;
     private InputStream inputStream;
     private String text;
+    private long size;
+    private String[] childNames;
 
     public RemoteFileSystemMessage(ByteBuffer bytes) {
         this.bytes = bytes;
@@ -42,6 +44,14 @@ public class RemoteFileSystemMessage extends RemoteFileSystemBaseMessage {
         this.text = text;
     }
 
+    public RemoteFileSystemMessage(long size) {
+        this.size = size;
+    }
+
+    public RemoteFileSystemMessage(final String[] childNames) {
+        this.childNames = childNames.clone();
+    }
+
     public ByteBuffer getBytes() {
         return bytes;
     }
@@ -52,5 +62,13 @@ public class RemoteFileSystemMessage extends RemoteFileSystemBaseMessage {
 
     public String getText() {
         return text;
+    }
+
+    public long getSize() {
+        return size;
+    }
+
+    public String[] getChildNames() {
+        return childNames.clone();
     }
 }
