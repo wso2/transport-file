@@ -24,21 +24,58 @@ package org.wso2.transport.remotefilesystem.message;
 public class RemoteFileSystemEvent extends RemoteFileSystemBaseMessage {
 
     private final String uri;
+    private final String baseName;
+    private final String path;
     private long fileSize;
     private long lastModifiedTime;
 
-    public RemoteFileSystemEvent(String uri) {
+    public RemoteFileSystemEvent(String uri, String baseName, String path) {
         this.uri = uri;
+        this.baseName = baseName;
+        this.path = path;
     }
 
+    /**
+     * This will return absolute path including the schema, username and masked password.
+     *
+     * @return The absolute path.
+     */
     public String getUri() {
         return this.uri;
     }
 
+    /**
+     * This will return file or folder name.
+     *
+     * @return File or folder name.
+     */
+    public String getBaseName() {
+        return baseName;
+    }
+
+    /**
+     * This will return relative path from the root folder.
+     *
+     * @return The relative path from root folder.
+     */
+    public String getPath() {
+        return path;
+    }
+
+    /**
+     * Determines the size of the file, in bytes.
+     *
+     * @return File size in bytes.
+     */
     public long getFileSize() {
         return fileSize;
     }
 
+    /**
+     * Determines the last-modified timestamp of the file.
+     *
+     * @return Last-modified timestamp.
+     */
     public long getLastModifiedTime() {
         return lastModifiedTime;
     }
