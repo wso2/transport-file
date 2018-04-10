@@ -44,7 +44,7 @@ public class TestServerRemoteFileSystemListener implements RemoteFileSystemListe
 
     @Override
     public boolean onMessage(RemoteFileSystemBaseMessage remoteFileSystemEvent) {
-        eventQueue.add(((RemoteFileSystemEvent) remoteFileSystemEvent).getUri());
+        eventQueue.add(((RemoteFileSystemEvent) remoteFileSystemEvent).getPath());
         if (++eventCounter >= this.expectedEventCount) {
             latch.countDown();
         }

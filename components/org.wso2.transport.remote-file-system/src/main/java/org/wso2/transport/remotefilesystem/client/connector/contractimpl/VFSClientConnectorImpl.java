@@ -186,7 +186,7 @@ public class VFSClientConnectorImpl implements VFSClientConnector {
                 String[] childrenNames = new String[pathObjects.length];
                 int i = 0;
                 for (FileObject child : pathObjects) {
-                    childrenNames[i++] = child.getName().getURI();
+                    childrenNames[i++] = child.getName().getPath();
                 }
                 RemoteFileSystemMessage children = new RemoteFileSystemMessage(childrenNames);
                 remoteFileSystemListener.onMessage(children);

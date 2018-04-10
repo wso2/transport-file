@@ -73,10 +73,12 @@ public class RemoteFileSystemProcessor implements Runnable {
     @Override
     public void run() {
         if (FileTransportUtils.acquireLock(fsManager, file, fso)) {
-            String uri = file.getName().getURI();
+            String uri = file.getName().getFriendlyURI();
+            String baseName = file.getName().getBaseName();
+            String path = file.getName().getPath();
             String originalUri = uri;
             uri = uri.startsWith("file://") ? uri.replace("file://", "") : uri;
-            RemoteFileSystemEvent message = new RemoteFileSystemEvent(uri);
+            RemoteFileSystemEvent message = new RemoteFileSystemEvent(uri, baseName, path);
             try {
                 message.setFileSize(file.getContent().getSize());
                 message.setLastModifiedTime(file.getContent().getLastModifiedTime());
