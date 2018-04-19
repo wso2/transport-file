@@ -70,7 +70,7 @@ public class DirectoryListener implements Runnable {
             throws LocalFileSystemServerConnectorException {
         serviceName = id;
         localFileSystemListener = listener;
-        String path = config.get(Constants.TRANSPORT_FILE_FILE_URI);
+        String path = config.get(Constants.FILE_URI);
         if (path == null || path.isEmpty()) {
             throw new LocalFileSystemServerConnectorException("Directory path[dirURI] property empty or " +
                     "not available for service: " + serviceName);

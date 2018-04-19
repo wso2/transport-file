@@ -24,72 +24,21 @@ package org.wso2.transport.remotefilesystem;
 public final class Constants {
 
     public static final String TRANSPORT_FILE_URI = "dirURI";
-    public static final String FILE_SORT_PARAM = "fileSortAttribute";
-    public static final String FILE_SORT_VALUE_NAME = "name";
-    public static final String FILE_SORT_VALUE_SIZE = "size";
-    public static final String FILE_SORT_VALUE_LASTMODIFIEDTIMESTAMP = "lastModifiedTimestamp";
-    public static final String FILE_SORT_ORDER = "fileSortAscending";
     public static final String FILE_NAME_PATTERN = "fileNamePattern";
-    public static final String ACTION_AFTER_PROCESS = "actionAfterProcess";
-    public static final String ACTION_AFTER_FAILURE = "actionAfterFailure";
-    public static final String MOVE_TIMESTAMP_FORMAT = "moveTimestampFormat";
-    public static final String MOVE_AFTER_PROCESS = "moveAfterProcess";
-    public static final String MOVE_AFTER_FAILURE = "moveAfterFailure";
-    public static final String FORCE_CREATE_FOLDER = "createMoveDir";
-    public static final String PARALLEL = "parallel";
-    public static final String THREAD_POOL_SIZE = "threadPoolSize";
-    public static final String FILE_PROCESS_COUNT = "perPollFileCount";
-    public static final String CREATE_FOLDER = "create-folder";
 
-    public static final String ACTION_MOVE = "MOVE";
-    public static final String ACTION_DELETE = "DELETE";
-    public static final String ACTION_NONE = "NONE";
-
-    public static final String SCHEME = "VFS_SCHEME";
-    public static final String SFTP_PREFIX = "sftp";
     public static final String SCHEME_SFTP = "sftp";
     public static final String SCHEME_FTP = "ftp";
 
-    public static final String FILE_TYPE = "filetype";
-    public static final String BINARY_TYPE = "BINARY";
-    public static final String LOCAL_TYPE = "LOCAL";
-    public static final String ASCII_TYPE = "ASCII";
-    public static final String EBCDIC_TYPE = "EBCDIC";
-
-    public static final String PROTOCOL_FTP = "ftp";
-
     public static final String URI = "uri";
-    public static final String ACTION = "action";
 
-    public static final String APPEND = "append";
-    public static final String MKDIR = "mkdir";
-    public static final String RMDIR = "rmdir";
-    public static final String PUT = "put";
-    public static final String GET = "get";
-    public static final String DELETE = "delete";
-    public static final String RENAME = "rename";
-    public static final String SIZE = "size";
-    public static final String LIST = "list";
-
-
-    public static final String FTP_PASSIVE_MODE = "FTP_PASSIVE_MODE";
-    public static final String PROTOCOL = "PROTOCOL";
+    public static final String PASSIVE_MODE = "PASSIVE_MODE";
+    public static final String USER_DIR_IS_ROOT = "USER_DIR_IS_ROOT";
     public static final String DESTINATION = "destination";
 
+    public static final String IDENTITY = "IDENTITY";
+    public static final String IDENTITY_PASS_PHRASE = "IDENTITY_PASS_PHRASE";
+    public static final String AVOID_PERMISSION_CHECK = "AVOID_PERMISSION_CHECK";
 
     private Constants() {
-    }
-
-    /**
-     * Enum for SFTP file options.
-     */
-    public enum SftpFileOption {
-        Identities,
-        UserDirIsRoot,
-        IdentityPassPhrase,
-        AvoidPermissionCheck;
-
-        SftpFileOption() {
-        }
     }
 }

@@ -19,16 +19,11 @@
 package org.wso2.transport.remotefilesystem.server;
 
 import org.apache.commons.vfs2.FileObject;
-import org.apache.commons.vfs2.FileSystemException;
 import org.apache.commons.vfs2.FileSystemManager;
 import org.apache.commons.vfs2.FileSystemOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.wso2.transport.remotefilesystem.Constants;
-import org.wso2.transport.remotefilesystem.exception.RemoteFileSystemConnectorException;
 import org.wso2.transport.remotefilesystem.listener.RemoteFileSystemListener;
-import org.wso2.transport.remotefilesystem.message.RemoteFileSystemEvent;
-import org.wso2.transport.remotefilesystem.server.util.FileTransportUtils;
 
 /**
  * File processor to process a single file.
@@ -72,7 +67,7 @@ public class RemoteFileSystemProcessor implements Runnable {
      */
     @Override
     public void run() {
-        if (FileTransportUtils.acquireLock(fsManager, file, fso)) {
+        /*if (FileTransportUtils.acquireLock(fsManager, file, fso)) {
             String uri = file.getName().getFriendlyURI();
             String baseName = file.getName().getBaseName();
             String path = file.getName().getPath();
@@ -120,6 +115,6 @@ public class RemoteFileSystemProcessor implements Runnable {
         } else {
             logger.warn("[" + serviceName + "] Couldn't get the lock for processing the file: " +
                     FileTransportUtils.maskURLPassword(file.getName().toString()));
-        }
+        }*/
     }
 }

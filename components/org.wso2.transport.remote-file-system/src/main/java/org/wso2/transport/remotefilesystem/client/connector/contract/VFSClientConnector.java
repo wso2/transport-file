@@ -30,6 +30,7 @@ public interface VFSClientConnector {
      *
      * @param message {@link RemoteFileSystemMessage} which contains relevant information which need to send to target
      *                file system.
+     * @param action FTP action that need to perform.
      */
-    void send(RemoteFileSystemMessage message);
+    void send(RemoteFileSystemMessage message, FtpAction action);
 }

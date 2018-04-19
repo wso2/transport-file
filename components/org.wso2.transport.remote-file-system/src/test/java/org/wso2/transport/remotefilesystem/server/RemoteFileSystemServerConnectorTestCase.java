@@ -71,7 +71,7 @@ public class RemoteFileSystemServerConnectorTestCase {
     @Test(description = "Testing whether correctly getting the file path.")
     public void retrieveFileListTestCase() throws ServerConnectorException, InterruptedException {
         int expectedEventCount = 3;
-        Map<String, String> parameters = getPropertyMap("NONE", false);
+        Map<String, String> parameters = getPropertyMap();
         CountDownLatch latch = new CountDownLatch(1);
         RemoteFileSystemConnectorFactory connectorFactory = new RemoteFileSystemConnectorFactoryImpl();
         TestServerRemoteFileSystemListener fileSystemListener = new TestServerRemoteFileSystemListener(latch,
@@ -94,12 +94,11 @@ public class RemoteFileSystemServerConnectorTestCase {
         testConnector.stop();
     }
 
-    @Test(description = "Testing whether correctly move files.", dependsOnMethods = "retrieveFileListTestCase")
+    /*@Test(description = "Testing whether correctly move files.", dependsOnMethods = "retrieveFileListTestCase")
     public void retrieveFileListAndMoveTestCase() throws ServerConnectorException, InterruptedException {
         int expectedEventCount = 2;
         fileSystem.add(new DirectoryEntry("/home/wso2/moveFolder"));
-        Map<String, String> parameters = getPropertyMap("MOVE", true);
-        parameters.put(Constants.MOVE_AFTER_PROCESS, buildConnectionURL() + "/moveFolder");
+        Map<String, String> parameters = getPropertyMap();
         parameters.put(Constants.FORCE_CREATE_FOLDER, String.valueOf(true));
         CountDownLatch latch = new CountDownLatch(1);
         RemoteFileSystemConnectorFactory connectorFactory = new RemoteFileSystemConnectorFactoryImpl();
@@ -129,7 +128,7 @@ public class RemoteFileSystemServerConnectorTestCase {
         fileSystem.add(new FileEntry("/home/wso2/del2.txt"));
         ftpServer.setFileSystem(fileSystem);
 
-        Map<String, String> parameters = getPropertyMap("DELETE", false);
+        Map<String, String> parameters = getPropertyMap();
         CountDownLatch latch = new CountDownLatch(1);
         RemoteFileSystemConnectorFactory connectorFactory = new RemoteFileSystemConnectorFactoryImpl();
         TestServerRemoteFileSystemListener fileSystemListener =
@@ -147,7 +146,7 @@ public class RemoteFileSystemServerConnectorTestCase {
         Assert.assertTrue(eventList.contains("/home/wso2/del1.txt"));
         Assert.assertTrue(eventList.contains("/home/wso2/del2.txt"));
         testConnector.stop();
-    }
+    }*/
 
     @Test(expectedExceptions = RemoteFileSystemConnectorException.class, expectedExceptionsMessageRegExp =
             "Failed to initialize File server connector for Service: TestService")
@@ -156,9 +155,7 @@ public class RemoteFileSystemServerConnectorTestCase {
         Map<String, String> parameters = new HashMap<>();
         parameters.put(Constants.TRANSPORT_FILE_URI,
                 "ftp://" + username + ":" + password + "@localhost:" + serverPort + "/home/wso2/file1.txt");
-        parameters.put(Constants.ACTION_AFTER_PROCESS, "NONE");
         parameters.put(org.wso2.carbon.connector.framework.server.polling.Constants.POLLING_INTERVAL, "2000");
-        parameters.put(Constants.PARALLEL, String.valueOf(false));
 
         CountDownLatch latch = new CountDownLatch(1);
         RemoteFileSystemConnectorFactory connectorFactory = new RemoteFileSystemConnectorFactoryImpl();
@@ -183,12 +180,12 @@ public class RemoteFileSystemServerConnectorTestCase {
         }
     }
 
-    private Map<String, String> getPropertyMap(String action, boolean parallel) {
+    private Map<String, String> getPropertyMap() {
         Map<String, String> parameters = new HashMap<>();
         parameters.put(Constants.TRANSPORT_FILE_URI, buildConnectionURL());
-        parameters.put(Constants.ACTION_AFTER_PROCESS, action);
+        parameters.put(Constants.USER_DIR_IS_ROOT, "false");
+        parameters.put(Constants.PASSIVE_MODE, "true");
         parameters.put(org.wso2.carbon.connector.framework.server.polling.Constants.POLLING_INTERVAL, "2000");
-        parameters.put(Constants.PARALLEL, String.valueOf(parallel));
         return parameters;
     }
 

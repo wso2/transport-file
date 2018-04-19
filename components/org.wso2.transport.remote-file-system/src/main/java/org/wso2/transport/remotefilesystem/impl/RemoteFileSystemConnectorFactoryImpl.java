@@ -42,7 +42,8 @@ public class RemoteFileSystemConnectorFactoryImpl implements RemoteFileSystemCon
 
     @Override
     public VFSClientConnector createVFSClientConnector(Map<String, String> connectorConfig,
-                                                       RemoteFileSystemListener remoteFileSystemListener) {
+                                                       RemoteFileSystemListener remoteFileSystemListener)
+            throws RemoteFileSystemConnectorException {
         return new VFSClientConnectorImpl(connectorConfig, remoteFileSystemListener);
     }
 }

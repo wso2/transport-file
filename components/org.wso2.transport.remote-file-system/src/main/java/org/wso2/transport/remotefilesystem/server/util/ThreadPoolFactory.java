@@ -77,7 +77,7 @@ public class ThreadPoolFactory {
             SecurityManager s = System.getSecurityManager();
             group = (s != null) ? s.getThreadGroup() :
                     Thread.currentThread().getThreadGroup();
-            namePrefix = "remote-file-" +
+            namePrefix = "ftp-" +
                     poolNumber.getAndIncrement() +
                     "-thread-";
         }

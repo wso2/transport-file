@@ -18,22 +18,24 @@
 
 package org.wso2.transport.remotefilesystem.server.util;
 
-import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
-import org.apache.commons.vfs2.FileSystemManager;
 import org.apache.commons.vfs2.FileSystemOptions;
-import org.apache.commons.vfs2.util.DelegatingFileSystemOptionsBuilder;
+import org.apache.commons.vfs2.provider.ftp.FtpFileSystemConfigBuilder;
+import org.apache.commons.vfs2.provider.sftp.IdentityInfo;
+import org.apache.commons.vfs2.provider.sftp.SftpFileSystemConfigBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wso2.transport.remotefilesystem.Constants;
 import org.wso2.transport.remotefilesystem.exception.RemoteFileSystemConnectorException;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.io.File;
 import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static org.wso2.transport.remotefilesystem.Constants.SCHEME_FTP;
+import static org.wso2.transport.remotefilesystem.Constants.SCHEME_SFTP;
 
 /**
  * Utility class for File Transport.
@@ -41,7 +43,6 @@ import java.util.regex.Pattern;
 public class FileTransportUtils {
 
     private static final Logger log = LoggerFactory.getLogger(FileTransportUtils.class);
-    private static List<String> processing = new ArrayList<>();
 
     private static final Pattern URL_PATTERN = Pattern.compile("[a-z]+://.*");
     private static final Pattern PASSWORD_PATTERN = Pattern.compile(":(?:[^/]+)@");
@@ -49,47 +50,45 @@ public class FileTransportUtils {
     /**
      * A utility method for setting the relevant configurations for the file system in question
      *
-     * @param options   Options to be used with the file system manager
-     * @param fsManager File system manager instance
+     * @param options Options to be used with the file system manager
      * @return A FileSystemOptions instance
-     * @throws RemoteFileSystemConnectorException   Throws an exception if there are any issues in configuring the
-     *                                              connector
      */
-    public static FileSystemOptions attachFileSystemOptions(Map<String, String> options, FileSystemManager fsManager)
+    public static FileSystemOptions attachFileSystemOptions(Map<String, String> options)
             throws RemoteFileSystemConnectorException {
         if (options == null) {
             return null;
         }
         FileSystemOptions opts = new FileSystemOptions();
-        DelegatingFileSystemOptionsBuilder delegate = new DelegatingFileSystemOptionsBuilder(fsManager);
-        if (Constants.SCHEME_SFTP.equals(options.get(Constants.SCHEME))) {
-            Constants.SftpFileOption[] array = Constants.SftpFileOption.values();
-            outer:
-            for (Constants.SftpFileOption fileOption : array) {
-                for (Map.Entry<String, String> entry : options.entrySet()) {
-                    if (entry.getValue() != null && entry.getKey().equals(fileOption.toString())) {
-                        try {
-                            delegate.setConfigString(opts, Constants.SCHEME_SFTP,
-                                    entry.getKey().toLowerCase(Locale.getDefault()), entry.getValue());
-                            continue outer;
-                        } catch (FileSystemException e) {
-                            throw new RemoteFileSystemConnectorException(
-                                    "Failed to set file transport configuration for scheme: "
-                                            + Constants.SCHEME_SFTP + " and option: " + fileOption.toString(), e);
-                        }
-                    }
+        String listeningDirURI = options.get(Constants.TRANSPORT_FILE_URI);
+        if (listeningDirURI.toLowerCase(Locale.getDefault()).startsWith(SCHEME_FTP)) {
+            final FtpFileSystemConfigBuilder configBuilder = FtpFileSystemConfigBuilder.getInstance();
+            if (options.get(Constants.PASSIVE_MODE) != null) {
+                configBuilder.setPassiveMode(opts, Boolean.parseBoolean(options.get(Constants.PASSIVE_MODE)));
+            }
+            if (options.get(Constants.USER_DIR_IS_ROOT) != null) {
+                configBuilder.setUserDirIsRoot(opts, Boolean.parseBoolean(Constants.USER_DIR_IS_ROOT));
+            }
+        } else if (listeningDirURI.toLowerCase(Locale.getDefault()).startsWith(SCHEME_SFTP)) {
+            final SftpFileSystemConfigBuilder configBuilder = SftpFileSystemConfigBuilder.getInstance();
+            if (options.get(Constants.USER_DIR_IS_ROOT) != null) {
+                configBuilder.setUserDirIsRoot(opts, Boolean.parseBoolean(Constants.USER_DIR_IS_ROOT));
+            }
+            if (options.get(Constants.IDENTITY) != null) {
+                try {
+                    configBuilder.setIdentityInfo(opts, new IdentityInfo(new File(options.get(Constants.IDENTITY))));
+                } catch (FileSystemException e) {
+                    throw new RemoteFileSystemConnectorException(e.getMessage(), e);
                 }
             }
-        }
-        if (options.get(Constants.FILE_TYPE) != null) {
-            try {
-                delegate.setConfigString(opts, options.get(Constants.SCHEME),
-                        Constants.FILE_TYPE, String.valueOf(getFileType(options.get(Constants.FILE_TYPE))));
-            } catch (FileSystemException e) {
-                throw new RemoteFileSystemConnectorException(
-                        "Failed to set file transport configuration for scheme: "
-                                                             + options.get(Constants.SCHEME) + " and option: "
-                                                             + Constants.FILE_TYPE, e);
+            if (options.get(Constants.IDENTITY_PASS_PHRASE) != null) {
+                try {
+                    configBuilder.setIdentityPassPhrase(opts, Constants.IDENTITY_PASS_PHRASE);
+                } catch (FileSystemException e) {
+                    throw new RemoteFileSystemConnectorException(e.getMessage(), e);
+                }
+            }
+            if (options.get(Constants.AVOID_PERMISSION_CHECK) != null) {
+                configBuilder.setAvoidPermissionCheck(opts, options.get(Constants.AVOID_PERMISSION_CHECK));
             }
         }
         return opts;
@@ -98,7 +97,7 @@ public class FileTransportUtils {
     /**
      * A utility method for masking the password in a file URI
      *
-     * @param url   URL to be masked
+     * @param url URL to be masked
      * @return The masked URL
      */
     public static String maskURLPassword(String url) {
@@ -109,102 +108,5 @@ public class FileTransportUtils {
         } else {
             return url;
         }
-    }
-
-    /**
-     * A utility method for retrieving the type of the file
-     *
-     * @param fileType  A string representing the type of a given file
-     * @return An integer representing the file type
-     */
-    private static Integer getFileType(String fileType) {
-        fileType = fileType.toUpperCase(Locale.US);
-        return Constants.ASCII_TYPE.equals(fileType) ? Integer.valueOf(0) : (
-                Constants.BINARY_TYPE.equals(fileType) ? Integer.valueOf(2) : (
-                        Constants.EBCDIC_TYPE.equals(fileType) ? Integer.valueOf(1) : (
-                                Constants.LOCAL_TYPE.equals(fileType) ? Integer.valueOf(3) : Integer.valueOf(2))));
-    }
-
-    /**
-     * Acquire the file level locking.
-     *
-     * @param fsManager     The file system manager instance
-     * @param fileObject    The file object to get the lock from
-     * @param fsOpts        The file system options to be used with the file system manager
-     * @return              Boolean value whether lock was successful
-     */
-    public static synchronized boolean acquireLock(FileSystemManager fsManager, FileObject fileObject,
-                                                   FileSystemOptions fsOpts) {
-        String strContext = fileObject.getName().getURI();
-
-        // When processing a directory list is fetched initially. Therefore
-        // there is still a chance of file processed by another process.
-        // Need to check the source file before processing.
-        try {
-            String parentURI = fileObject.getParent().getName().getURI();
-            if (parentURI.contains("?")) {
-                String suffix = parentURI.substring(parentURI.indexOf("?"));
-                strContext += suffix;
-            }
-            FileObject sourceFile = fsManager.resolveFile(strContext, fsOpts);
-            if (!sourceFile.exists()) {
-                return false;
-            }
-        } catch (FileSystemException e) {
-            return false;
-        }
-        FileObject lockObject = null;
-        try {
-            // check whether there is an existing lock for this item, if so it is assumed
-            // to be processed by an another listener (downloading) or a sender (uploading)
-            // lock file is derived by attaching the ".lock" second extension to the file name
-            String fullPath = fileObject.getName().getURI();
-            int pos = fullPath.indexOf("?");
-            if (pos != -1) {
-                fullPath = fullPath.substring(0, pos);
-            }
-            lockObject = fsManager.resolveFile(fullPath + ".lock", fsOpts);
-            if (lockObject.exists()) {
-                if (log.isDebugEnabled()) {
-                    log.debug("There seems to be an external lock, aborting the processing of the file " +
-                            maskURLPassword(fileObject.getName().getURI()) +
-                            ". This could possibly be due to some other party already " +
-                            "processing this file or the file is still being uploaded");
-                }
-            } else if (processing.contains(fullPath)) {
-                if (log.isDebugEnabled()) {
-                    log.debug(maskURLPassword(fileObject.getName().getURI()) + "is already being processed.");
-                }
-            } else {
-                //Check the original file existence before the lock file to handle concurrent access scenario
-                FileObject originalFileObject = fsManager.resolveFile(fullPath, fsOpts);
-                if (!originalFileObject.exists()) {
-                    return false;
-                }
-                processing.add(fullPath);
-                return true;
-            }
-        } catch (FileSystemException fse) {
-            log.error("Cannot get the lock for the file : " + maskURLPassword(fileObject.getName().getURI()) +
-                      " before processing", fse);
-            if (lockObject != null) {
-                try {
-                    fsManager.closeFileSystem(lockObject.getParent().getFileSystem());
-                } catch (FileSystemException e) {
-                    log.warn("Unable to close the lockObject parent file system");
-                }
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Release a file item lock acquired at the start of processing.
-     *
-     * @param fileObject    File that needs the lock to be removed
-     */
-    public static synchronized void releaseLock(FileObject fileObject) {
-        String fullPath = fileObject.getName().getURI();
-        processing.remove(fullPath);
     }
 }

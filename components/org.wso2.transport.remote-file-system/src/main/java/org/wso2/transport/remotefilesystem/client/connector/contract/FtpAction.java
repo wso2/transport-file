@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2018 WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  * WSO2 Inc. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -16,21 +16,11 @@
  * under the License.
  */
 
-package org.wso2.transport.remotefilesystem.internal;
-
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
+package org.wso2.transport.remotefilesystem.client.connector.contract;
 
 /**
- * OSGi BundleActivator of the File System Server Connector Bundle.
+ * {@link VFSClientConnector} supported FTP actions.
  */
-public class RemoteFileSystemConnectorBundleActivator implements BundleActivator {
-
-    @Override
-    public void start(BundleContext bundleContext) throws Exception {
-    }
-
-    @Override
-    public void stop(BundleContext bundleContext) throws Exception {
-    }
+public enum FtpAction {
+    APPEND, MKDIR, RMDIR, PUT, GET, DELETE, RENAME, SIZE, LIST
 }

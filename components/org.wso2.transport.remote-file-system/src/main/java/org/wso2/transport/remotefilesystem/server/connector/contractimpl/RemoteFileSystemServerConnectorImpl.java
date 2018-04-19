@@ -39,14 +39,12 @@ public class RemoteFileSystemServerConnectorImpl extends PollingServerConnector
 
     private static final Logger log = LoggerFactory.getLogger(RemoteFileSystemServerConnectorImpl.class);
 
-    private static final long FILE_CONNECTOR_DEFAULT_INTERVAL = 10000L;
     private RemoteFileSystemConsumer consumer;
 
     public RemoteFileSystemServerConnectorImpl(String id, Map<String, String> properties,
                                                RemoteFileSystemListener remoteFileSystemListener)
             throws RemoteFileSystemConnectorException {
         super(id, properties);
-        interval = FILE_CONNECTOR_DEFAULT_INTERVAL; //this might be overridden in super.start()
         try {
             consumer = new RemoteFileSystemConsumer(id, getProperties(), remoteFileSystemListener);
         } catch (ServerConnectorException e) {
@@ -82,7 +80,6 @@ public class RemoteFileSystemServerConnectorImpl extends PollingServerConnector
     @Override
     public void stop() throws RemoteFileSystemConnectorException {
         try {
-            consumer.stopThreadPool();
             destroy();
         } catch (ServerConnectorException e) {
             throw new RemoteFileSystemConnectorException("Failed to stop RemoteFileSystemServer" +
