@@ -174,8 +174,7 @@ public class VFSClientConnectorImpl implements VFSClientConnector {
                     }
                     break;
                 case SIZE:
-                    RemoteFileSystemMessage fileSize = new RemoteFileSystemMessage(path.getContent().getSize());
-                    remoteFileSystemListener.onMessage(fileSize);
+                    remoteFileSystemListener.onMessage(new RemoteFileSystemMessage(path.getContent().getSize()));
                     break;
                 case LIST:
                     final FileObject[] pathObjects = path.getChildren();
@@ -186,6 +185,9 @@ public class VFSClientConnectorImpl implements VFSClientConnector {
                     }
                     RemoteFileSystemMessage children = new RemoteFileSystemMessage(childrenNames);
                     remoteFileSystemListener.onMessage(children);
+                    break;
+                case ISDIR:
+                    remoteFileSystemListener.onMessage(new RemoteFileSystemMessage(path.isFolder()));
                     break;
                 default:
                     break;
@@ -219,7 +221,7 @@ public class VFSClientConnectorImpl implements VFSClientConnector {
         }
         if (config.get(Constants.IDENTITY_PASS_PHRASE) != null) {
             try {
-                configBuilder.setIdentityPassPhrase(opts, Constants.IDENTITY_PASS_PHRASE);
+                configBuilder.setIdentityPassPhrase(opts, config.get(Constants.IDENTITY_PASS_PHRASE));
             } catch (FileSystemException e) {
                 throw new RemoteFileSystemConnectorException(e.getMessage(), e);
             }

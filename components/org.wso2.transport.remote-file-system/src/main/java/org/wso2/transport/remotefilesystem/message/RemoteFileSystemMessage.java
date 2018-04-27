@@ -31,6 +31,7 @@ public class RemoteFileSystemMessage extends RemoteFileSystemBaseMessage {
     private String text;
     private long size;
     private String[] childNames;
+    private boolean directory;
 
     public RemoteFileSystemMessage(ByteBuffer bytes) {
         this.bytes = bytes;
@@ -52,6 +53,10 @@ public class RemoteFileSystemMessage extends RemoteFileSystemBaseMessage {
         this.childNames = childNames.clone();
     }
 
+    public RemoteFileSystemMessage(boolean isDirectory) {
+        this.directory = isDirectory;
+    }
+
     public ByteBuffer getBytes() {
         return bytes;
     }
@@ -70,5 +75,9 @@ public class RemoteFileSystemMessage extends RemoteFileSystemBaseMessage {
 
     public String[] getChildNames() {
         return childNames.clone();
+    }
+
+    public boolean isDirectory() {
+        return directory;
     }
 }

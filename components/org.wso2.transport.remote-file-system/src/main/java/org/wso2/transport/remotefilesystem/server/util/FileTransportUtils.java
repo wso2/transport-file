@@ -82,7 +82,7 @@ public class FileTransportUtils {
             }
             if (options.get(Constants.IDENTITY_PASS_PHRASE) != null) {
                 try {
-                    configBuilder.setIdentityPassPhrase(opts, Constants.IDENTITY_PASS_PHRASE);
+                    configBuilder.setIdentityPassPhrase(opts, options.get(Constants.IDENTITY_PASS_PHRASE));
                 } catch (FileSystemException e) {
                     throw new RemoteFileSystemConnectorException(e.getMessage(), e);
                 }

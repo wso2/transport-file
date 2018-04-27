@@ -18,12 +18,10 @@
 
 package org.wso2.transport.remotefilesystem.exception;
 
-import org.wso2.carbon.messaging.exceptions.ServerConnectorException;
-
 /**
  * Generic {@link Exception} for File Server connector.
  */
-public class RemoteFileSystemConnectorException extends ServerConnectorException {
+public class RemoteFileSystemConnectorException extends Exception {
     public RemoteFileSystemConnectorException(String message) {
         super(message);
     }

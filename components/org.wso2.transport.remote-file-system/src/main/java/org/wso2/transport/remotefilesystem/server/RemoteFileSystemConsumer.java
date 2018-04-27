@@ -29,10 +29,12 @@ import org.slf4j.LoggerFactory;
 import org.wso2.transport.remotefilesystem.Constants;
 import org.wso2.transport.remotefilesystem.exception.RemoteFileSystemConnectorException;
 import org.wso2.transport.remotefilesystem.listener.RemoteFileSystemListener;
+import org.wso2.transport.remotefilesystem.message.FileInfo;
 import org.wso2.transport.remotefilesystem.message.RemoteFileSystemEvent;
 import org.wso2.transport.remotefilesystem.server.util.FileTransportUtils;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -50,6 +52,8 @@ public class RemoteFileSystemConsumer {
     private String fileNamePattern = null;
 
     private List<String> processed = new ArrayList<>();
+    private List<String> current;
+    private List<FileInfo> addedFileInfo;
 
     /**
      * Constructor for the RemoteFileSystemConsumer.
@@ -121,6 +125,8 @@ public class RemoteFileSystemConsumer {
             isFileExists = listeningDir.exists();
             isFileReadable = listeningDir.isReadable();
             if (isFileExists && isFileReadable) {
+                current = new ArrayList<>();
+                addedFileInfo = new ArrayList<>();
                 FileObject[] children = null;
                 try {
                     children = listeningDir.getChildren();
@@ -139,6 +145,28 @@ public class RemoteFileSystemConsumer {
                     }
                 } else {
                     directoryHandler(children);
+                    List<String> deleted = new ArrayList<>();
+                    if (processed.size() != current.size()) {
+                        final Iterator<String> it = processed.iterator();
+                        while (it.hasNext()) {
+                            String fileName = it.next();
+                            if (!current.contains(fileName)) {
+                                // File got delete between previous and this scan.
+                                deleted.add(fileName);
+                                // Remove from processed list.
+                                it.remove();
+                            }
+                        }
+                    }
+                    try {
+                        if (addedFileInfo.size() > 0 || deleted.size() > 0) {
+                            RemoteFileSystemEvent message = new RemoteFileSystemEvent(addedFileInfo, deleted);
+                            remoteFileSystemListener.onMessage(message);
+                        }
+                    } catch (Exception e) {
+                        remoteFileSystemListener.onError(e);
+                    }
+
                 }
             } else {
                 remoteFileSystemListener.onError(new RemoteFileSystemConnectorException(
@@ -150,7 +178,7 @@ public class RemoteFileSystemConsumer {
         } catch (FileSystemException e) {
             remoteFileSystemListener.onError(e);
             throw new RemoteFileSystemConnectorException(
-                    "[" + serviceName + "] Unable to get details " + "from remote server.", e);
+                    "[" + serviceName + "] Unable to get details from remote server.", e);
         } finally {
             try {
                 if (listeningDir != null) {
@@ -172,7 +200,8 @@ public class RemoteFileSystemConsumer {
      *
      * @param children The array containing child elements of a folder
      */
-    private void directoryHandler(FileObject[] children) throws RemoteFileSystemConnectorException {
+    private void directoryHandler(FileObject[] children)
+            throws FileSystemException {
         for (FileObject child : children) {
             if (!(fileNamePattern == null || child.getName().getBaseName().matches(fileNamePattern))) {
                 if (log.isDebugEnabled()) {
@@ -180,12 +209,7 @@ public class RemoteFileSystemConsumer {
                             + " is not processed because it did not match the specified pattern.");
                 }
             } else {
-                FileType childType;
-                try {
-                    childType = child.getType();
-                } catch (FileSystemException e) {
-                    throw new RemoteFileSystemConnectorException(e.getMessage(), e);
-                }
+                FileType childType = child.getType();
                 if (childType == FileType.FOLDER) {
                     FileObject[] c = null;
                     try {
@@ -197,7 +221,6 @@ public class RemoteFileSystemConsumer {
                                     .maskURLPassword(listeningDirURI), ignored);
                         }
                     }
-                    // if this is a file that would translate to a single message
                     if (c == null || c.length == 0) {
                         if (log.isDebugEnabled()) {
                             log.debug("Folder at " + child.getName().getFriendlyURI() + " is empty.");
@@ -206,6 +229,7 @@ public class RemoteFileSystemConsumer {
                         directoryHandler(c);
                     }
                 } else {
+                    current.add(child.getName().getPath());
                     fileHandler(child);
                 }
             }
@@ -217,30 +241,15 @@ public class RemoteFileSystemConsumer {
      *
      * @param file A single file to be processed
      */
-    private void fileHandler(FileObject file) {
-        String uri = file.getName().getPath();
-        if (processed.contains(uri)) {
+    private void fileHandler(FileObject file) throws FileSystemException {
+        String path = file.getName().getPath();
+        if (processed.contains(file.getName().getPath())) {
             return;
         }
-        String baseName = file.getName().getBaseName();
-        String path = file.getName().getPath();
-        String originalUri = uri;
-        uri = uri.startsWith("file://") ? uri.replace("file://", "") : uri;
-        RemoteFileSystemEvent message = new RemoteFileSystemEvent(uri, baseName, path);
-        try {
-            message.setFileSize(file.getContent().getSize());
-            message.setLastModifiedTime(file.getContent().getLastModifiedTime());
-        } catch (FileSystemException e) {
-            log.error("[" + serviceName + "] Failed to set meta data for file: " + file.getName().getFriendlyURI(), e);
-            remoteFileSystemListener.onError(e);
-        }
-        try {
-            remoteFileSystemListener.onMessage(message);
-        } catch (Exception e) {
-            remoteFileSystemListener.onError(e);
-            log.warn("[" + serviceName + "] Failed to send stream from file: " + FileTransportUtils
-                    .maskURLPassword(originalUri) + " to listener. ", e);
-        }
+        FileInfo info = new FileInfo(path);
+        info.setFileSize(file.getContent().getSize());
+        info.setLastModifiedTime(file.getContent().getLastModifiedTime());
+        addedFileInfo.add(info);
         processed.add(path);
     }
 }

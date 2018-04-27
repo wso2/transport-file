@@ -18,12 +18,8 @@
 
 package org.wso2.transport.remotefilesystem.server.connector.contractimpl;
 
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.wso2.carbon.connector.framework.server.polling.PollingServerConnector;
-import org.wso2.carbon.messaging.CarbonMessageProcessor;
-import org.wso2.carbon.messaging.exceptions.ServerConnectorException;
 import org.wso2.transport.remotefilesystem.exception.RemoteFileSystemConnectorException;
 import org.wso2.transport.remotefilesystem.listener.RemoteFileSystemListener;
 import org.wso2.transport.remotefilesystem.server.RemoteFileSystemConsumer;
@@ -34,62 +30,29 @@ import java.util.Map;
 /**
  * Implementation of the {@link RemoteFileSystemServerConnector} interface.
  */
-public class RemoteFileSystemServerConnectorImpl extends PollingServerConnector
-        implements RemoteFileSystemServerConnector {
+public class RemoteFileSystemServerConnectorImpl implements RemoteFileSystemServerConnector {
 
     private static final Logger log = LoggerFactory.getLogger(RemoteFileSystemServerConnectorImpl.class);
 
     private RemoteFileSystemConsumer consumer;
+    private String id;
 
     public RemoteFileSystemServerConnectorImpl(String id, Map<String, String> properties,
-                                               RemoteFileSystemListener remoteFileSystemListener)
-            throws RemoteFileSystemConnectorException {
-        super(id, properties);
+            RemoteFileSystemListener remoteFileSystemListener) throws RemoteFileSystemConnectorException {
+        this.id = id;
         try {
-            consumer = new RemoteFileSystemConsumer(id, getProperties(), remoteFileSystemListener);
-        } catch (ServerConnectorException e) {
-            throw new RemoteFileSystemConnectorException("Failed to initialize File server connector " +
-                    "for Service: " + id, e);
+            consumer = new RemoteFileSystemConsumer(id, properties, remoteFileSystemListener);
+        } catch (RemoteFileSystemConnectorException e) {
+            throw new RemoteFileSystemConnectorException(
+                    "Failed to initialize File server connector " + "for Service: " + id, e);
         }
     }
 
-    @Override
-    public void setMessageProcessor(CarbonMessageProcessor carbonMessageProcessor) {
-    }
-
-    @Override
-    protected void init() throws ServerConnectorException {
-
-    }
-
-    @Override
-    protected void destroy() throws ServerConnectorException {
-        super.stop();
-    }
-
-    @Override
-    public void start() throws RemoteFileSystemConnectorException {
+    public void poll() {
         try {
-            super.start();
-        } catch (RuntimeException | ServerConnectorException e) {
-            throw new RemoteFileSystemConnectorException("Failed to start RemoteFileSystemServer" +
-                    " connector for Service: " + id, e);
-        }
-    }
-
-    @Override
-    public void stop() throws RemoteFileSystemConnectorException {
-        try {
-            destroy();
-        } catch (ServerConnectorException e) {
-            throw new RemoteFileSystemConnectorException("Failed to stop RemoteFileSystemServer" +
-                    " for Service: " + id, e);
-        }
-    }
-
-    @Override
-    protected void poll() {
-        try {
+            if (log.isDebugEnabled()) {
+                log.debug("Poll method invoke for " + id);
+            }
             consumer.consume();
         } catch (RemoteFileSystemConnectorException e) {
             log.error("Error executing the polling cycle of RemoteFileSystemServer for service: " + id, e);

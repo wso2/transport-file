@@ -22,5 +22,5 @@ package org.wso2.transport.remotefilesystem.client.connector.contract;
  * {@link VFSClientConnector} supported FTP actions.
  */
 public enum FtpAction {
-    APPEND, MKDIR, RMDIR, PUT, GET, DELETE, RENAME, SIZE, LIST
+    APPEND, MKDIR, RMDIR, PUT, GET, DELETE, RENAME, SIZE, LIST, ISDIR
 }

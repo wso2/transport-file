@@ -18,73 +18,26 @@
 
 package org.wso2.transport.remotefilesystem.message;
 
+import java.util.List;
+
 /**
  * This class represent the events that happen in remote file system.
  */
 public class RemoteFileSystemEvent extends RemoteFileSystemBaseMessage {
 
-    private final String uri;
-    private final String baseName;
-    private final String path;
-    private long fileSize;
-    private long lastModifiedTime;
+    private List<FileInfo> addedFiles;
+    private List<String> deletedFiles;
 
-    public RemoteFileSystemEvent(String uri, String baseName, String path) {
-        this.uri = uri;
-        this.baseName = baseName;
-        this.path = path;
+    public RemoteFileSystemEvent(List<FileInfo> addedFiles, List<String> deletedFiles) {
+        this.addedFiles = addedFiles;
+        this.deletedFiles = deletedFiles;
     }
 
-    /**
-     * This will return absolute path including the schema, username and masked password.
-     *
-     * @return The absolute path.
-     */
-    public String getUri() {
-        return this.uri;
+    public List<FileInfo> getAddedFiles() {
+        return addedFiles;
     }
 
-    /**
-     * This will return file or folder name.
-     *
-     * @return File or folder name.
-     */
-    public String getBaseName() {
-        return baseName;
-    }
-
-    /**
-     * This will return relative path from the root folder.
-     *
-     * @return The relative path from root folder.
-     */
-    public String getPath() {
-        return path;
-    }
-
-    /**
-     * Determines the size of the file, in bytes.
-     *
-     * @return File size in bytes.
-     */
-    public long getFileSize() {
-        return fileSize;
-    }
-
-    /**
-     * Determines the last-modified timestamp of the file.
-     *
-     * @return Last-modified timestamp.
-     */
-    public long getLastModifiedTime() {
-        return lastModifiedTime;
-    }
-
-    public void setFileSize(long fileSize) {
-        this.fileSize = fileSize;
-    }
-
-    public void setLastModifiedTime(long lastModifiedTime) {
-        this.lastModifiedTime = lastModifiedTime;
+    public List<String> getDeletedFiles() {
+        return deletedFiles;
     }
 }

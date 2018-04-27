@@ -28,7 +28,6 @@ import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-import org.wso2.carbon.messaging.exceptions.ServerConnectorException;
 import org.wso2.transport.remotefilesystem.Constants;
 import org.wso2.transport.remotefilesystem.RemoteFileSystemConnectorFactory;
 import org.wso2.transport.remotefilesystem.client.connector.contract.FtpAction;
@@ -82,7 +81,7 @@ public class RemoteFileSystemClientConnectorTestCase {
     }
 
     @Test(description = "Check file content.")
-    public void fileContentReadTestCase() throws ServerConnectorException, InterruptedException {
+    public void fileContentReadTestCase() throws InterruptedException, RemoteFileSystemConnectorException {
         Map<String, String> parameters = new HashMap<>();
         parameters.put(Constants.URI, buildConnectionURL() + "/file1.txt");
         parameters.put(Constants.USER_DIR_IS_ROOT, Boolean.FALSE.toString());
@@ -98,7 +97,8 @@ public class RemoteFileSystemClientConnectorTestCase {
     }
 
     @Test(description = "Content read from non exist file")
-    public void fileContentReadFromNonExistFileTestCase() throws ServerConnectorException, InterruptedException {
+    public void fileContentReadFromNonExistFileTestCase()
+            throws InterruptedException, RemoteFileSystemConnectorException {
         Map<String, String> parameters = new HashMap<>();
         parameters.put(Constants.URI, buildConnectionURL() + "/non-exist.txt");
         parameters.put(Constants.USER_DIR_IS_ROOT, Boolean.FALSE.toString());
@@ -116,7 +116,7 @@ public class RemoteFileSystemClientConnectorTestCase {
     }
 
     @Test(description = "Check file content.")
-    public void fileContentWriteStreamTestCase() throws ServerConnectorException, InterruptedException {
+    public void fileContentWriteStreamTestCase() throws InterruptedException, RemoteFileSystemConnectorException {
         String newContent = "Sample text";
         Map<String, String> parameters = new HashMap<>();
         parameters.put(Constants.URI, buildConnectionURL() + "/file2.txt");
@@ -144,7 +144,7 @@ public class RemoteFileSystemClientConnectorTestCase {
     }
 
     @Test(description = "Check file content.")
-    public void fileContentWriteByteBufferTestCase() throws ServerConnectorException, InterruptedException {
+    public void fileContentWriteByteBufferTestCase() throws InterruptedException, RemoteFileSystemConnectorException {
         String newContent = "Sample text";
         Map<String, String> parameters = new HashMap<>();
         parameters.put(Constants.URI, buildConnectionURL() + "/file31.txt");
@@ -167,7 +167,7 @@ public class RemoteFileSystemClientConnectorTestCase {
     }
 
     @Test(description = "Write content by creating new file")
-    public void writeContentToNewFileTestCase() throws ServerConnectorException, InterruptedException {
+    public void writeContentToNewFileTestCase() throws InterruptedException, RemoteFileSystemConnectorException {
         String newContent = "Sample text";
         Map<String, String> parameters = new HashMap<>();
         parameters.put(Constants.URI, buildConnectionURL() + "/file4.txt");
@@ -195,7 +195,7 @@ public class RemoteFileSystemClientConnectorTestCase {
     }
 
     @Test(description = "Check file content append.", dependsOnMethods = "fileContentReadTestCase")
-    public void fileContentAppendTestCase() throws ServerConnectorException, InterruptedException {
+    public void fileContentAppendTestCase() throws InterruptedException, RemoteFileSystemConnectorException {
         String newContent = " Sample text";
         Map<String, String> parameters = new HashMap<>();
         parameters.put(Constants.URI, buildConnectionURL() + "/file1.txt");
@@ -223,7 +223,7 @@ public class RemoteFileSystemClientConnectorTestCase {
     }
 
     @Test(description = "Create new file.")
-    public void fileCreateTestCase() throws ServerConnectorException, InterruptedException {
+    public void fileCreateTestCase() throws InterruptedException, RemoteFileSystemConnectorException {
         Map<String, String> parameters = new HashMap<>();
         String filePath = "/file3.txt";
         parameters.put(Constants.URI, buildConnectionURL() + filePath);
@@ -240,7 +240,7 @@ public class RemoteFileSystemClientConnectorTestCase {
     }
 
     @Test(description = "Trying to create file that already exists.", dependsOnMethods = "fileCreateTestCase")
-    public void existingFileCreateTestCase() throws ServerConnectorException, InterruptedException {
+    public void existingFileCreateTestCase() throws InterruptedException, RemoteFileSystemConnectorException {
         Map<String, String> parameters = new HashMap<>();
         String filePath = "/file3.txt";
         parameters.put(Constants.URI, buildConnectionURL() + filePath);
@@ -258,7 +258,7 @@ public class RemoteFileSystemClientConnectorTestCase {
     }
 
     @Test(description = "Create new folder.")
-    public void folderCreateTestCase() throws ServerConnectorException, InterruptedException {
+    public void folderCreateTestCase() throws InterruptedException, RemoteFileSystemConnectorException {
         Map<String, String> parameters = new HashMap<>();
         String filePath = "/folder";
         parameters.put(Constants.URI, buildConnectionURL() + filePath);
@@ -275,7 +275,7 @@ public class RemoteFileSystemClientConnectorTestCase {
     }
 
     @Test(description = "Delete file.", dependsOnMethods = "fileCreateTestCase")
-    public void fileDeleteTestCase() throws ServerConnectorException, InterruptedException {
+    public void fileDeleteTestCase() throws InterruptedException, RemoteFileSystemConnectorException {
         Map<String, String> parameters = new HashMap<>();
         String filePath = "/file3.txt";
         parameters.put(Constants.URI, buildConnectionURL() + filePath);
@@ -292,7 +292,7 @@ public class RemoteFileSystemClientConnectorTestCase {
     }
 
     @Test(description = "Delete non exist file.", dependsOnMethods = "fileCreateTestCase")
-    public void deleteNonExistTestCase() throws ServerConnectorException, InterruptedException {
+    public void deleteNonExistTestCase() throws InterruptedException, RemoteFileSystemConnectorException {
         String filePath = "/non-exit.txt";
         Map<String, String> parameters = new HashMap<>();
         parameters.put(Constants.URI, buildConnectionURL() + filePath);
@@ -310,7 +310,7 @@ public class RemoteFileSystemClientConnectorTestCase {
     }
 
     @Test(description = "File move.")
-    public void fileMoveTestCase() throws ServerConnectorException, InterruptedException {
+    public void fileMoveTestCase() throws InterruptedException, RemoteFileSystemConnectorException {
         Map<String, String> parameters = new HashMap<>();
         parameters.put(Constants.URI, buildConnectionURL() + "/file2.txt");
         parameters.put(Constants.DESTINATION, buildConnectionURL() + "/move/file2-move.txt");
@@ -328,7 +328,8 @@ public class RemoteFileSystemClientConnectorTestCase {
     }
 
     @Test(description = "File move with creating parent folder.")
-    public void fileMoveWithCreateParentFolderTestCase() throws ServerConnectorException, InterruptedException {
+    public void fileMoveWithCreateParentFolderTestCase() throws InterruptedException,
+            RemoteFileSystemConnectorException {
         Map<String, String> parameters = new HashMap<>();
         parameters.put(Constants.URI, buildConnectionURL() + "/file10.txt");
         parameters.put(Constants.DESTINATION, buildConnectionURL() + "/newMoveFolder/file2-move.txt");
@@ -347,7 +348,8 @@ public class RemoteFileSystemClientConnectorTestCase {
     }
 
     @Test(description = "File move to already existing folder.", dependsOnMethods = "fileMoveTestCase")
-    public void fileMoveAlreadyExistingFolderTestCase() throws ServerConnectorException, InterruptedException {
+    public void fileMoveAlreadyExistingFolderTestCase() throws InterruptedException,
+            RemoteFileSystemConnectorException {
         Map<String, String> parameters = new HashMap<>();
         parameters.put(Constants.URI, buildConnectionURL() + "/file11.txt");
         parameters.put(Constants.DESTINATION, buildConnectionURL() + "/move/file2-move.txt");
@@ -366,7 +368,7 @@ public class RemoteFileSystemClientConnectorTestCase {
     }
 
     @Test(description = "Trying to move non existing file", dependsOnMethods = "fileMoveTestCase")
-    public void moveNonExistingFileTestCase() throws ServerConnectorException, InterruptedException {
+    public void moveNonExistingFileTestCase() throws InterruptedException, RemoteFileSystemConnectorException {
         Map<String, String> parameters = new HashMap<>();
         parameters.put(Constants.URI, buildConnectionURL() + "/non-exist.txt");
         parameters.put(Constants.DESTINATION, buildConnectionURL() + "/move/file7-move.txt");
