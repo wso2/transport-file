@@ -23,7 +23,6 @@ package org.wso2.transport.remotefilesystem;
  */
 public final class Constants {
 
-    public static final String TRANSPORT_FILE_URI = "dirURI";
     public static final String FILE_NAME_PATTERN = "fileNamePattern";
 
     public static final String SCHEME_SFTP = "sftp";

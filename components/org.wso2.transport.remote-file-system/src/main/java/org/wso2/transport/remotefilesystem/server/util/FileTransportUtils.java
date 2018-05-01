@@ -59,39 +59,48 @@ public class FileTransportUtils {
             return null;
         }
         FileSystemOptions opts = new FileSystemOptions();
-        String listeningDirURI = options.get(Constants.TRANSPORT_FILE_URI);
+        String listeningDirURI = options.get(Constants.URI);
         if (listeningDirURI.toLowerCase(Locale.getDefault()).startsWith(SCHEME_FTP)) {
-            final FtpFileSystemConfigBuilder configBuilder = FtpFileSystemConfigBuilder.getInstance();
-            if (options.get(Constants.PASSIVE_MODE) != null) {
-                configBuilder.setPassiveMode(opts, Boolean.parseBoolean(options.get(Constants.PASSIVE_MODE)));
-            }
-            if (options.get(Constants.USER_DIR_IS_ROOT) != null) {
-                configBuilder.setUserDirIsRoot(opts, Boolean.parseBoolean(Constants.USER_DIR_IS_ROOT));
-            }
+            setFtpOptions(options, opts);
         } else if (listeningDirURI.toLowerCase(Locale.getDefault()).startsWith(SCHEME_SFTP)) {
-            final SftpFileSystemConfigBuilder configBuilder = SftpFileSystemConfigBuilder.getInstance();
-            if (options.get(Constants.USER_DIR_IS_ROOT) != null) {
-                configBuilder.setUserDirIsRoot(opts, Boolean.parseBoolean(Constants.USER_DIR_IS_ROOT));
-            }
-            if (options.get(Constants.IDENTITY) != null) {
-                try {
-                    configBuilder.setIdentityInfo(opts, new IdentityInfo(new File(options.get(Constants.IDENTITY))));
-                } catch (FileSystemException e) {
-                    throw new RemoteFileSystemConnectorException(e.getMessage(), e);
-                }
-            }
-            if (options.get(Constants.IDENTITY_PASS_PHRASE) != null) {
-                try {
-                    configBuilder.setIdentityPassPhrase(opts, options.get(Constants.IDENTITY_PASS_PHRASE));
-                } catch (FileSystemException e) {
-                    throw new RemoteFileSystemConnectorException(e.getMessage(), e);
-                }
-            }
-            if (options.get(Constants.AVOID_PERMISSION_CHECK) != null) {
-                configBuilder.setAvoidPermissionCheck(opts, options.get(Constants.AVOID_PERMISSION_CHECK));
-            }
+            setSftpOptions(options, opts);
         }
         return opts;
+    }
+
+    private static void setFtpOptions(Map<String, String> options, FileSystemOptions opts) {
+        final FtpFileSystemConfigBuilder configBuilder = FtpFileSystemConfigBuilder.getInstance();
+        if (options.get(Constants.PASSIVE_MODE) != null) {
+            configBuilder.setPassiveMode(opts, Boolean.parseBoolean(options.get(Constants.PASSIVE_MODE)));
+        }
+        if (options.get(Constants.USER_DIR_IS_ROOT) != null) {
+            configBuilder.setUserDirIsRoot(opts, Boolean.parseBoolean(Constants.USER_DIR_IS_ROOT));
+        }
+    }
+
+    private static void setSftpOptions(Map<String, String> options, FileSystemOptions opts)
+            throws RemoteFileSystemConnectorException {
+        final SftpFileSystemConfigBuilder configBuilder = SftpFileSystemConfigBuilder.getInstance();
+        if (options.get(Constants.USER_DIR_IS_ROOT) != null) {
+            configBuilder.setUserDirIsRoot(opts, Boolean.parseBoolean(Constants.USER_DIR_IS_ROOT));
+        }
+        if (options.get(Constants.IDENTITY) != null) {
+            try {
+                configBuilder.setIdentityInfo(opts, new IdentityInfo(new File(options.get(Constants.IDENTITY))));
+            } catch (FileSystemException e) {
+                throw new RemoteFileSystemConnectorException(e.getMessage(), e);
+            }
+        }
+        if (options.get(Constants.IDENTITY_PASS_PHRASE) != null) {
+            try {
+                configBuilder.setIdentityPassPhrase(opts, options.get(Constants.IDENTITY_PASS_PHRASE));
+            } catch (FileSystemException e) {
+                throw new RemoteFileSystemConnectorException(e.getMessage(), e);
+            }
+        }
+        if (options.get(Constants.AVOID_PERMISSION_CHECK) != null) {
+            configBuilder.setAvoidPermissionCheck(opts, options.get(Constants.AVOID_PERMISSION_CHECK));
+        }
     }
 
     /**

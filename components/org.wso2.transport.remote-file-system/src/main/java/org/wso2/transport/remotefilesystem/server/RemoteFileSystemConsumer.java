@@ -68,7 +68,7 @@ public class RemoteFileSystemConsumer {
         this.serviceName = id;
         this.remoteFileSystemListener = listener;
         validateParam(fileProperties);
-        listeningDirURI = fileProperties.get(Constants.TRANSPORT_FILE_URI);
+        listeningDirURI = fileProperties.get(Constants.URI);
         try {
             FileSystemManager fsManager = VFS.getManager();
             FileSystemOptions fso = FileTransportUtils.attachFileSystemOptions(fileProperties);
@@ -92,14 +92,14 @@ public class RemoteFileSystemConsumer {
     }
 
     private void validateParam(Map<String, String> fileProperties) throws RemoteFileSystemConnectorException {
-        if (fileProperties.get(Constants.TRANSPORT_FILE_URI) == null) {
+        if (fileProperties.get(Constants.URI) == null) {
             final RemoteFileSystemConnectorException e = new RemoteFileSystemConnectorException(
-                    Constants.TRANSPORT_FILE_URI + " is a mandatory parameter for FTP transport.");
+                    Constants.URI + " is a mandatory parameter for FTP transport.");
             remoteFileSystemListener.onError(e);
             throw e;
-        } else if (fileProperties.get(Constants.TRANSPORT_FILE_URI).trim().isEmpty()) {
+        } else if (fileProperties.get(Constants.URI).trim().isEmpty()) {
             final RemoteFileSystemConnectorException e = new RemoteFileSystemConnectorException(
-                    "[" + serviceName + "] " + Constants.TRANSPORT_FILE_URI
+                    "[" + serviceName + "] " + Constants.URI
                             + " parameter cannot be empty for FTP transport.");
             remoteFileSystemListener.onError(e);
             throw e;

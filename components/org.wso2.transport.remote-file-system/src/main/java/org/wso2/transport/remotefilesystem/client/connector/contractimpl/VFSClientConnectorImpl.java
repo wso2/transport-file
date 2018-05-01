@@ -24,9 +24,6 @@ import org.apache.commons.vfs2.FileSystemManager;
 import org.apache.commons.vfs2.FileSystemOptions;
 import org.apache.commons.vfs2.Selectors;
 import org.apache.commons.vfs2.VFS;
-import org.apache.commons.vfs2.provider.ftp.FtpFileSystemConfigBuilder;
-import org.apache.commons.vfs2.provider.sftp.IdentityInfo;
-import org.apache.commons.vfs2.provider.sftp.SftpFileSystemConfigBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wso2.transport.remotefilesystem.Constants;
@@ -35,9 +32,9 @@ import org.wso2.transport.remotefilesystem.client.connector.contract.VFSClientCo
 import org.wso2.transport.remotefilesystem.exception.RemoteFileSystemConnectorException;
 import org.wso2.transport.remotefilesystem.listener.RemoteFileSystemListener;
 import org.wso2.transport.remotefilesystem.message.RemoteFileSystemMessage;
+import org.wso2.transport.remotefilesystem.server.util.FileTransportUtils;
 
 import java.io.Closeable;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -53,20 +50,13 @@ public class VFSClientConnectorImpl implements VFSClientConnector {
 
     private Map<String, String> connectorConfig;
     private RemoteFileSystemListener remoteFileSystemListener;
-    private FileSystemOptions opts = new FileSystemOptions();
+    private FileSystemOptions opts;
 
     public VFSClientConnectorImpl(Map<String, String> config, RemoteFileSystemListener listener)
             throws RemoteFileSystemConnectorException {
         this.connectorConfig = config;
         this.remoteFileSystemListener = listener;
-        final String url = config.get(Constants.URI);
-        if (url != null) {
-            if (url.startsWith(Constants.SCHEME_FTP)) {
-                setFtpSystemConfig(config);
-            } else if (url.startsWith(Constants.SCHEME_SFTP)) {
-                setSftpSystemConfig(config);
-            }
-        }
+        opts = FileTransportUtils.attachFileSystemOptions(config);
     }
 
     @Override
@@ -204,40 +194,6 @@ public class VFSClientConnectorImpl implements VFSClientConnector {
                 }
             }
             closeQuietly(outputStream);
-        }
-    }
-
-    private void setSftpSystemConfig(Map<String, String> config) throws RemoteFileSystemConnectorException {
-        final SftpFileSystemConfigBuilder configBuilder = SftpFileSystemConfigBuilder.getInstance();
-        if (config.get(Constants.USER_DIR_IS_ROOT) != null) {
-            configBuilder.setUserDirIsRoot(opts, Boolean.parseBoolean(Constants.USER_DIR_IS_ROOT));
-        }
-        if (config.get(Constants.IDENTITY) != null) {
-            try {
-                configBuilder.setIdentityInfo(opts, new IdentityInfo(new File(config.get(Constants.IDENTITY))));
-            } catch (FileSystemException e) {
-                throw new RemoteFileSystemConnectorException(e.getMessage(), e);
-            }
-        }
-        if (config.get(Constants.IDENTITY_PASS_PHRASE) != null) {
-            try {
-                configBuilder.setIdentityPassPhrase(opts, config.get(Constants.IDENTITY_PASS_PHRASE));
-            } catch (FileSystemException e) {
-                throw new RemoteFileSystemConnectorException(e.getMessage(), e);
-            }
-        }
-        if (config.get(Constants.AVOID_PERMISSION_CHECK) != null) {
-            configBuilder.setAvoidPermissionCheck(opts, config.get(Constants.AVOID_PERMISSION_CHECK));
-        }
-    }
-
-    private void setFtpSystemConfig(Map<String, String> config) {
-        final FtpFileSystemConfigBuilder configBuilder = FtpFileSystemConfigBuilder.getInstance();
-        if (config.get(Constants.PASSIVE_MODE) != null) {
-            configBuilder.setPassiveMode(opts, Boolean.parseBoolean(config.get(Constants.PASSIVE_MODE)));
-        }
-        if (config.get(Constants.USER_DIR_IS_ROOT) != null) {
-            configBuilder.setUserDirIsRoot(opts, Boolean.parseBoolean(Constants.USER_DIR_IS_ROOT));
         }
     }
 

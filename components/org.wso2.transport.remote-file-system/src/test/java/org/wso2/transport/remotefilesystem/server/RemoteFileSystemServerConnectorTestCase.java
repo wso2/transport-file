@@ -122,7 +122,7 @@ public class RemoteFileSystemServerConnectorTestCase {
     public void invalidRootFolderTestCase() throws InterruptedException, RemoteFileSystemConnectorException {
         int expectedEventCount = 1;
         Map<String, String> parameters = new HashMap<>();
-        parameters.put(Constants.TRANSPORT_FILE_URI,
+        parameters.put(Constants.URI,
                 "ftp://" + username + ":" + password + "@localhost:" + serverPort + "/home/wso2/file1.txt");
 
         CountDownLatch latch = new CountDownLatch(1);
@@ -150,7 +150,7 @@ public class RemoteFileSystemServerConnectorTestCase {
 
     private Map<String, String> getPropertyMap() {
         Map<String, String> parameters = new HashMap<>();
-        parameters.put(Constants.TRANSPORT_FILE_URI, buildConnectionURL());
+        parameters.put(Constants.URI, buildConnectionURL());
         parameters.put(Constants.USER_DIR_IS_ROOT, "false");
         parameters.put(Constants.PASSIVE_MODE, "true");
         parameters.put(Constants.AVOID_PERMISSION_CHECK, "true");
