@@ -28,13 +28,14 @@ import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-import org.wso2.carbon.messaging.exceptions.ServerConnectorException;
 import org.wso2.transport.remotefilesystem.Constants;
 import org.wso2.transport.remotefilesystem.RemoteFileSystemConnectorFactory;
 import org.wso2.transport.remotefilesystem.exception.RemoteFileSystemConnectorException;
 import org.wso2.transport.remotefilesystem.impl.RemoteFileSystemConnectorFactoryImpl;
+import org.wso2.transport.remotefilesystem.message.FileInfo;
 import org.wso2.transport.remotefilesystem.server.connector.contract.RemoteFileSystemServerConnector;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,6 +53,8 @@ public class RemoteFileSystemServerConnectorTestCase {
     private static String username = "wso2";
     private static String password = "wso2123";
     private static String rootFolder = "/home/wso2";
+    private static String file1 = "/home/wso2/file1.txt";
+    private static String file2 = "/home/wso2/exe/run.exe";
 
     @BeforeClass
     public void init() {
@@ -61,115 +64,77 @@ public class RemoteFileSystemServerConnectorTestCase {
 
         fileSystem = new UnixFakeFileSystem();
         fileSystem.add(new DirectoryEntry(rootFolder));
-        fileSystem.add(new FileEntry("/home/wso2/file1.txt", "some content 1234567890"));
-        fileSystem.add(new FileEntry("/home/wso2/exe/run.exe", "Test Value"));
+        fileSystem.add(new FileEntry(file1, "some content 1234567890"));
+        fileSystem.add(new FileEntry(file2, "Test Value"));
         ftpServer.setFileSystem(fileSystem);
         ftpServer.start();
         serverPort = ftpServer.getServerControlPort();
     }
 
     @Test(description = "Testing whether correctly getting the file path.")
-    public void retrieveFileListTestCase() throws ServerConnectorException, InterruptedException {
+    public void retrieveFileListTestCase() throws InterruptedException, RemoteFileSystemConnectorException {
         int expectedEventCount = 3;
-        Map<String, String> parameters = getPropertyMap("NONE", false);
+        String newFile = "/home/wso2/file2.txt";
+        List<String> fileNames = new ArrayList<>();
+        fileNames.add(file1);
+        fileNames.add(file2);
+        fileNames.add(newFile);
+        Map<String, String> parameters = getPropertyMap();
         CountDownLatch latch = new CountDownLatch(1);
         RemoteFileSystemConnectorFactory connectorFactory = new RemoteFileSystemConnectorFactoryImpl();
         TestServerRemoteFileSystemListener fileSystemListener = new TestServerRemoteFileSystemListener(latch,
                 expectedEventCount);
-        RemoteFileSystemServerConnector testConnector =
-                connectorFactory.createServerConnector("TestService", parameters, fileSystemListener);
-        testConnector.start();
-        fileSystem.add(new FileEntry("/home/wso2/file2.txt"));
+        RemoteFileSystemServerConnector testConnector = connectorFactory
+                .createServerConnector("TestService", parameters, fileSystemListener);
+        testConnector.poll();
+        fileSystem.add(new FileEntry(newFile));
+        int i = 0;
+        while (!fileSystem.exists(newFile)) {
+            Thread.sleep(1000);
+            if (i++ > 10) {
+                break;
+            }
+        }
+        testConnector.poll();
+        List<FileInfo> fileList = fileSystemListener.getFileInfos();
+        i = 0;
+        while (fileList.size() < 3) {
+            testConnector.poll();
+            Thread.sleep(1000);
+            if (i++ > 10) {
+                break;
+            }
+        }
         latch.await(1, TimeUnit.MINUTES);
-        List<String> eventList = fileSystemListener.getEventList();
-        if (eventList.size() == 0) {
+        if (fileList.size() == 0) {
             Assert.fail("File event didn't triggered.");
         }
-        Assert.assertEquals(eventList.size(), expectedEventCount, "Generated events count mismatch " +
-                "with the expected.");
-        Assert.assertTrue(eventList.contains("/home/wso2/exe/run.exe"), "run.exe didn't received.");
-        Assert.assertTrue(eventList.contains("/home/wso2/file1.txt"), "file1 didn't received.");
-        Assert.assertTrue(eventList.contains("/home/wso2/file2.txt"), "file2 didn't received.");
+        Assert.assertEquals(fileList.size(), expectedEventCount, "Generated events count mismatch with the expected.");
+
+        for (FileInfo info : fileList) {
+            Assert.assertTrue(fileNames.contains(info.getPath()));
+        }
         fileSystem.delete("/home/wso2/file2.txt");
-        testConnector.stop();
     }
 
-    @Test(description = "Testing whether correctly move files.", dependsOnMethods = "retrieveFileListTestCase")
-    public void retrieveFileListAndMoveTestCase() throws ServerConnectorException, InterruptedException {
-        int expectedEventCount = 2;
-        fileSystem.add(new DirectoryEntry("/home/wso2/moveFolder"));
-        Map<String, String> parameters = getPropertyMap("MOVE", true);
-        parameters.put(Constants.MOVE_AFTER_PROCESS, buildConnectionURL() + "/moveFolder");
-        parameters.put(Constants.FORCE_CREATE_FOLDER, String.valueOf(true));
-        CountDownLatch latch = new CountDownLatch(1);
-        RemoteFileSystemConnectorFactory connectorFactory = new RemoteFileSystemConnectorFactoryImpl();
-        TestServerRemoteFileSystemListener fileSystemListener =
-                new TestServerRemoteFileSystemListener(latch, expectedEventCount);
-        RemoteFileSystemServerConnector testConnector =
-                connectorFactory.createServerConnector("TestService", parameters, fileSystemListener);
-        testConnector.start();
-        latch.await(1, TimeUnit.MINUTES);
-        List<String> eventList = fileSystemListener.getEventList();
-        if (eventList.size() == 0) {
-            Assert.fail("File event didn't triggered.");
-        }
-        Assert.assertEquals(eventList.size(), expectedEventCount, "Generated events count mismatch " +
-                "with the expected.");
-        Assert.assertTrue(eventList.contains("/home/wso2/exe/run.exe"), "run.exe didn't received.");
-        Assert.assertTrue(eventList.contains("/home/wso2/file1.txt"), "file1 didn't received.");
-        testConnector.stop();
-    }
-
-    @Test(description = "Testing whether correctly move files.", dependsOnMethods = "retrieveFileListAndMoveTestCase")
-    public void retrieveFileListAndDeleteTestCase() throws ServerConnectorException, InterruptedException {
-        int expectedEventCount = 2;
-        FileSystem fileSystem = new UnixFakeFileSystem();
-        fileSystem.add(new DirectoryEntry(rootFolder));
-        fileSystem.add(new FileEntry("/home/wso2/del1.txt"));
-        fileSystem.add(new FileEntry("/home/wso2/del2.txt"));
-        ftpServer.setFileSystem(fileSystem);
-
-        Map<String, String> parameters = getPropertyMap("DELETE", false);
-        CountDownLatch latch = new CountDownLatch(1);
-        RemoteFileSystemConnectorFactory connectorFactory = new RemoteFileSystemConnectorFactoryImpl();
-        TestServerRemoteFileSystemListener fileSystemListener =
-                new TestServerRemoteFileSystemListener(latch, expectedEventCount);
-        RemoteFileSystemServerConnector testConnector =
-                connectorFactory.createServerConnector("TestService", parameters, fileSystemListener);
-        testConnector.start();
-        latch.await(1, TimeUnit.MINUTES);
-        List<String> eventList = fileSystemListener.getEventList();
-        if (eventList.size() == 0) {
-            Assert.fail("File event didn't triggered.");
-        }
-        Assert.assertEquals(eventList.size(), expectedEventCount, "Generated events count mismatch " +
-                "with the expected.");
-        Assert.assertTrue(eventList.contains("/home/wso2/del1.txt"));
-        Assert.assertTrue(eventList.contains("/home/wso2/del2.txt"));
-        testConnector.stop();
-    }
-
-    @Test(expectedExceptions = RemoteFileSystemConnectorException.class, expectedExceptionsMessageRegExp =
-            "Failed to initialize File server connector for Service: TestService")
+    @Test(expectedExceptions = RemoteFileSystemConnectorException.class,
+          expectedExceptionsMessageRegExp = "Failed to initialize File server connector for Service: TestService")
     public void invalidRootFolderTestCase() throws InterruptedException, RemoteFileSystemConnectorException {
         int expectedEventCount = 1;
         Map<String, String> parameters = new HashMap<>();
-        parameters.put(Constants.TRANSPORT_FILE_URI,
+        parameters.put(Constants.URI,
                 "ftp://" + username + ":" + password + "@localhost:" + serverPort + "/home/wso2/file1.txt");
-        parameters.put(Constants.ACTION_AFTER_PROCESS, "NONE");
-        parameters.put(org.wso2.carbon.connector.framework.server.polling.Constants.POLLING_INTERVAL, "2000");
-        parameters.put(Constants.PARALLEL, String.valueOf(false));
 
         CountDownLatch latch = new CountDownLatch(1);
         RemoteFileSystemConnectorFactory connectorFactory = new RemoteFileSystemConnectorFactoryImpl();
-        TestServerRemoteFileSystemListener fileSystemListener =
-                new TestServerRemoteFileSystemListener(latch, expectedEventCount);
+        TestServerRemoteFileSystemListener fileSystemListener = new TestServerRemoteFileSystemListener(latch,
+                expectedEventCount);
         try {
             connectorFactory.createServerConnector("TestService", parameters, fileSystemListener);
         } catch (RemoteFileSystemConnectorException e) {
             Assert.assertEquals(e.getCause().getMessage(),
-                    "[TestService] File system server connector is used to listen to a folder. " +
-                            "But the given path does not refer to a folder.");
+                    "[TestService] File system server connector is used to listen to a folder. "
+                            + "But the given path does not refer to a folder.");
             throw e;
         }
         latch.await(1, TimeUnit.MINUTES);
@@ -183,12 +148,12 @@ public class RemoteFileSystemServerConnectorTestCase {
         }
     }
 
-    private Map<String, String> getPropertyMap(String action, boolean parallel) {
+    private Map<String, String> getPropertyMap() {
         Map<String, String> parameters = new HashMap<>();
-        parameters.put(Constants.TRANSPORT_FILE_URI, buildConnectionURL());
-        parameters.put(Constants.ACTION_AFTER_PROCESS, action);
-        parameters.put(org.wso2.carbon.connector.framework.server.polling.Constants.POLLING_INTERVAL, "2000");
-        parameters.put(Constants.PARALLEL, String.valueOf(parallel));
+        parameters.put(Constants.URI, buildConnectionURL());
+        parameters.put(Constants.USER_DIR_IS_ROOT, "false");
+        parameters.put(Constants.PASSIVE_MODE, "true");
+        parameters.put(Constants.AVOID_PERMISSION_CHECK, "true");
         return parameters;
     }
 

@@ -27,7 +27,7 @@ public final class Constants {
     }
 
     //file connector parameters
-    public static final String TRANSPORT_FILE_FILE_URI = "dirURI";
+    public static final String FILE_URI = "dirURI";
     public static final String FILE_TRANSPORT_PROPERTY_SERVICE_NAME = "TRANSPORT_FILE_SERVICE_NAME";
     public static final String DIRECTORY_WATCH_EVENTS = "events";
     public static final String DIRECTORY_WATCH_RECURSIVE = "recursive";

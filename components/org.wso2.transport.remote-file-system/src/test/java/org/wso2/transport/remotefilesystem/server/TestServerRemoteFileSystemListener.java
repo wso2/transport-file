@@ -19,6 +19,7 @@
 package org.wso2.transport.remotefilesystem.server;
 
 import org.wso2.transport.remotefilesystem.listener.RemoteFileSystemListener;
+import org.wso2.transport.remotefilesystem.message.FileInfo;
 import org.wso2.transport.remotefilesystem.message.RemoteFileSystemBaseMessage;
 import org.wso2.transport.remotefilesystem.message.RemoteFileSystemEvent;
 
@@ -35,17 +36,20 @@ public class TestServerRemoteFileSystemListener implements RemoteFileSystemListe
     private int expectedEventCount;
     private Throwable throwable;
     private int eventCounter = 0;
-    private List<String> eventQueue = new ArrayList<>();
+    private List<FileInfo> fileInfos;
 
     TestServerRemoteFileSystemListener(CountDownLatch latch, int expectedEventCount) {
         this.latch = latch;
         this.expectedEventCount = expectedEventCount;
+        fileInfos = new ArrayList<>();
     }
 
     @Override
     public boolean onMessage(RemoteFileSystemBaseMessage remoteFileSystemEvent) {
-        eventQueue.add(((RemoteFileSystemEvent) remoteFileSystemEvent).getPath());
-        if (++eventCounter >= this.expectedEventCount) {
+        RemoteFileSystemEvent event = (RemoteFileSystemEvent) remoteFileSystemEvent;
+        fileInfos.addAll(event.getAddedFiles());
+        eventCounter += event.getAddedFiles().size();
+        if (eventCounter >= this.expectedEventCount) {
             latch.countDown();
         }
         return true;
@@ -62,11 +66,11 @@ public class TestServerRemoteFileSystemListener implements RemoteFileSystemListe
         latch.countDown();
     }
 
-    List<String> getEventList() {
-        return eventQueue;
-    }
-
     Throwable getThrowable() {
         return throwable;
+    }
+
+    public List<FileInfo> getFileInfos() {
+        return fileInfos;
     }
 }

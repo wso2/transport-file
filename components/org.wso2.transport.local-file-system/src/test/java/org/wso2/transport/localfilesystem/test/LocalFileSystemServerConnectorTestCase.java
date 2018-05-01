@@ -303,7 +303,7 @@ public class LocalFileSystemServerConnectorTestCase {
     @Test(expectedExceptions = LocalFileSystemServerConnectorException.class)
     public void emptyWatchEventPropertyCheckTestCase() throws LocalFileSystemServerConnectorException {
         Map<String, String> parameters = new HashMap<>();
-        parameters.put(Constants.TRANSPORT_FILE_FILE_URI, rootDirectory.getAbsolutePath());
+        parameters.put(Constants.FILE_URI, rootDirectory.getAbsolutePath());
         LocalFileSystemConnectorFactory connectorFactory = new LocalFileSystemConnectorFactoryImpl();
         TestRemoteFileSystemListener fileSystemListener = new TestRemoteFileSystemListener(null, 1);
         connectorFactory.createServerConnector("TestService", parameters, fileSystemListener);
@@ -312,7 +312,7 @@ public class LocalFileSystemServerConnectorTestCase {
     @Test(expectedExceptions = LocalFileSystemServerConnectorException.class)
     public void invalidWatchEventPropertyCheckTestCase() throws LocalFileSystemServerConnectorException {
         Map<String, String> parameters = new HashMap<>();
-        parameters.put(Constants.TRANSPORT_FILE_FILE_URI, rootDirectory.getAbsolutePath());
+        parameters.put(Constants.FILE_URI, rootDirectory.getAbsolutePath());
         parameters.put(Constants.DIRECTORY_WATCH_EVENTS, "create,delete,invalid");
         LocalFileSystemConnectorFactory connectorFactory = new LocalFileSystemConnectorFactoryImpl();
         TestRemoteFileSystemListener fileSystemListener = new TestRemoteFileSystemListener(null, 1);
@@ -322,7 +322,7 @@ public class LocalFileSystemServerConnectorTestCase {
     @Test(expectedExceptions = LocalFileSystemServerConnectorException.class)
     public void invalidPathCheckTestCase() throws LocalFileSystemServerConnectorException {
         Map<String, String> parameters = new HashMap<>();
-        parameters.put(Constants.TRANSPORT_FILE_FILE_URI, "/invalid/path");
+        parameters.put(Constants.FILE_URI, "/invalid/path");
         parameters.put(Constants.DIRECTORY_WATCH_EVENTS, "create");
         parameters.put(Constants.DIRECTORY_WATCH_RECURSIVE, String.valueOf(true));
         LocalFileSystemConnectorFactory connectorFactory = new LocalFileSystemConnectorFactoryImpl();
@@ -354,7 +354,7 @@ public class LocalFileSystemServerConnectorTestCase {
 
     private Map<String, String> getPropertyMap(String watchEvents, boolean recursive) {
         Map<String, String> parameters = new HashMap<>();
-        parameters.put(Constants.TRANSPORT_FILE_FILE_URI, rootDirectory.getAbsolutePath());
+        parameters.put(Constants.FILE_URI, rootDirectory.getAbsolutePath());
         parameters.put(Constants.DIRECTORY_WATCH_EVENTS, watchEvents);
         parameters.put(Constants.DIRECTORY_WATCH_RECURSIVE, String.valueOf(recursive));
         return parameters;

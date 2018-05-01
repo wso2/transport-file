@@ -21,21 +21,16 @@ package org.wso2.transport.remotefilesystem.server.connector.contract;
 import org.wso2.transport.remotefilesystem.exception.RemoteFileSystemConnectorException;
 
 /**
- * RemoteFileSystemServer Connector interface to start and stop the pooling operation for given the directory location.
+ * RemoteFileSystemServer Connector interface to poll information from given the directory location.
  */
 public interface RemoteFileSystemServerConnector {
 
     /**
-     * Start the polling operation.
+     * This method will check the latest status of the given directory location.
+     * Details will receive through {@link org.wso2.transport.remotefilesystem.listener.RemoteFileSystemListener}
+     * once the execution finish.
      *
-     * @throws RemoteFileSystemConnectorException If unable to start the polling.
+     * @throws RemoteFileSystemConnectorException if execution failed.
      */
-    void start() throws RemoteFileSystemConnectorException;
-
-    /**
-     * Stop the polling operation.
-     *
-     * @throws RemoteFileSystemConnectorException If unable to stop the polling.
-     */
-    void stop() throws RemoteFileSystemConnectorException;
+    void poll() throws RemoteFileSystemConnectorException;
 }

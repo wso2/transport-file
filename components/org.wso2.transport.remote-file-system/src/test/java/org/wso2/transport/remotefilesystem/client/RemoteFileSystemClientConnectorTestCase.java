@@ -28,9 +28,9 @@ import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-import org.wso2.carbon.messaging.exceptions.ServerConnectorException;
 import org.wso2.transport.remotefilesystem.Constants;
 import org.wso2.transport.remotefilesystem.RemoteFileSystemConnectorFactory;
+import org.wso2.transport.remotefilesystem.client.connector.contract.FtpAction;
 import org.wso2.transport.remotefilesystem.client.connector.contract.VFSClientConnector;
 import org.wso2.transport.remotefilesystem.exception.RemoteFileSystemConnectorException;
 import org.wso2.transport.remotefilesystem.impl.RemoteFileSystemConnectorFactoryImpl;
@@ -81,35 +81,34 @@ public class RemoteFileSystemClientConnectorTestCase {
     }
 
     @Test(description = "Check file content.")
-    public void fileContentReadTestCase() throws ServerConnectorException, InterruptedException {
+    public void fileContentReadTestCase() throws InterruptedException, RemoteFileSystemConnectorException {
         Map<String, String> parameters = new HashMap<>();
         parameters.put(Constants.URI, buildConnectionURL() + "/file1.txt");
-        parameters.put(Constants.ACTION, Constants.GET);
-        parameters.put(Constants.PROTOCOL, Constants.PROTOCOL_FTP);
-        parameters.put(Constants.FTP_PASSIVE_MODE, Boolean.TRUE.toString());
+        parameters.put(Constants.USER_DIR_IS_ROOT, Boolean.FALSE.toString());
+        parameters.put(Constants.PASSIVE_MODE, Boolean.TRUE.toString());
         CountDownLatch latch = new CountDownLatch(1);
         RemoteFileSystemConnectorFactory connectorFactory = new RemoteFileSystemConnectorFactoryImpl();
         TestReadActionListener fileSystemListener = new TestReadActionListener(latch);
         VFSClientConnector clientConnector =
                 connectorFactory.createVFSClientConnector(parameters, fileSystemListener);
-        clientConnector.send(null);
+        clientConnector.send(null, FtpAction.GET);
         latch.await(3, TimeUnit.SECONDS);
         Assert.assertEquals(fileSystemListener.getContent(), content, "File content invalid.");
     }
 
     @Test(description = "Content read from non exist file")
-    public void fileContentReadFromNonExistFileTestCase() throws ServerConnectorException, InterruptedException {
+    public void fileContentReadFromNonExistFileTestCase()
+            throws InterruptedException, RemoteFileSystemConnectorException {
         Map<String, String> parameters = new HashMap<>();
         parameters.put(Constants.URI, buildConnectionURL() + "/non-exist.txt");
-        parameters.put(Constants.ACTION, Constants.GET);
-        parameters.put(Constants.PROTOCOL, Constants.PROTOCOL_FTP);
-        parameters.put(Constants.FTP_PASSIVE_MODE, Boolean.TRUE.toString());
+        parameters.put(Constants.USER_DIR_IS_ROOT, Boolean.FALSE.toString());
+        parameters.put(Constants.PASSIVE_MODE, Boolean.TRUE.toString());
         CountDownLatch latch = new CountDownLatch(1);
         RemoteFileSystemConnectorFactory connectorFactory = new RemoteFileSystemConnectorFactoryImpl();
         TestReadActionListener fileSystemListener = new TestReadActionListener(latch);
         VFSClientConnector clientConnector =
                 connectorFactory.createVFSClientConnector(parameters, fileSystemListener);
-        clientConnector.send(null);
+        clientConnector.send(null, FtpAction.GET);
         latch.await(3, TimeUnit.SECONDS);
         Assert.assertNull(fileSystemListener.getContent(), "File content invalid.");
         Assert.assertTrue(fileSystemListener.getThrowable() instanceof RemoteFileSystemConnectorException,
@@ -117,13 +116,12 @@ public class RemoteFileSystemClientConnectorTestCase {
     }
 
     @Test(description = "Check file content.")
-    public void fileContentWriteStreamTestCase() throws ServerConnectorException, InterruptedException {
+    public void fileContentWriteStreamTestCase() throws InterruptedException, RemoteFileSystemConnectorException {
         String newContent = "Sample text";
         Map<String, String> parameters = new HashMap<>();
         parameters.put(Constants.URI, buildConnectionURL() + "/file2.txt");
-        parameters.put(Constants.ACTION, Constants.PUT);
-        parameters.put(Constants.PROTOCOL, Constants.PROTOCOL_FTP);
-        parameters.put(Constants.FTP_PASSIVE_MODE, Boolean.TRUE.toString());
+        parameters.put(Constants.USER_DIR_IS_ROOT, Boolean.FALSE.toString());
+        parameters.put(Constants.PASSIVE_MODE, Boolean.TRUE.toString());
         CountDownLatch latch = new CountDownLatch(1);
         RemoteFileSystemConnectorFactory connectorFactory = new RemoteFileSystemConnectorFactoryImpl();
         TestReadActionListener fileSystemListener = new TestReadActionListener(latch);
@@ -131,7 +129,7 @@ public class RemoteFileSystemClientConnectorTestCase {
                 connectorFactory.createVFSClientConnector(parameters, fileSystemListener);
         InputStream stream = new ByteArrayInputStream(newContent.getBytes(StandardCharsets.UTF_8));
         RemoteFileSystemMessage message = new RemoteFileSystemMessage(stream);
-        clientConnector.send(message);
+        clientConnector.send(message, FtpAction.PUT);
         latch.await(3, TimeUnit.SECONDS);
         FileEntry entry = (FileEntry) fileSystem.getEntry("/home/ballerina/file2.txt");
         InputStream inputStream = entry.createInputStream();
@@ -146,13 +144,12 @@ public class RemoteFileSystemClientConnectorTestCase {
     }
 
     @Test(description = "Check file content.")
-    public void fileContentWriteByteBufferTestCase() throws ServerConnectorException, InterruptedException {
+    public void fileContentWriteByteBufferTestCase() throws InterruptedException, RemoteFileSystemConnectorException {
         String newContent = "Sample text";
         Map<String, String> parameters = new HashMap<>();
         parameters.put(Constants.URI, buildConnectionURL() + "/file31.txt");
-        parameters.put(Constants.ACTION, Constants.PUT);
-        parameters.put(Constants.PROTOCOL, Constants.PROTOCOL_FTP);
-        parameters.put(Constants.FTP_PASSIVE_MODE, Boolean.TRUE.toString());
+        parameters.put(Constants.USER_DIR_IS_ROOT, Boolean.FALSE.toString());
+        parameters.put(Constants.PASSIVE_MODE, Boolean.TRUE.toString());
         CountDownLatch latch = new CountDownLatch(1);
         RemoteFileSystemConnectorFactory connectorFactory = new RemoteFileSystemConnectorFactoryImpl();
         TestReadActionListener fileSystemListener = new TestReadActionListener(latch);
@@ -160,7 +157,7 @@ public class RemoteFileSystemClientConnectorTestCase {
                 connectorFactory.createVFSClientConnector(parameters, fileSystemListener);
         final ByteBuffer wrap = ByteBuffer.wrap(newContent.getBytes(StandardCharsets.UTF_8));
         RemoteFileSystemMessage message = new RemoteFileSystemMessage(wrap);
-        clientConnector.send(message);
+        clientConnector.send(message, FtpAction.PUT);
         latch.await(3, TimeUnit.SECONDS);
         FileEntry entry = (FileEntry) fileSystem.getEntry("/home/ballerina/file31.txt");
         InputStream inputStream = entry.createInputStream();
@@ -170,13 +167,12 @@ public class RemoteFileSystemClientConnectorTestCase {
     }
 
     @Test(description = "Write content by creating new file")
-    public void writeContentToNewFileTestCase() throws ServerConnectorException, InterruptedException {
+    public void writeContentToNewFileTestCase() throws InterruptedException, RemoteFileSystemConnectorException {
         String newContent = "Sample text";
         Map<String, String> parameters = new HashMap<>();
         parameters.put(Constants.URI, buildConnectionURL() + "/file4.txt");
-        parameters.put(Constants.ACTION, Constants.PUT);
-        parameters.put(Constants.PROTOCOL, Constants.PROTOCOL_FTP);
-        parameters.put(Constants.FTP_PASSIVE_MODE, Boolean.TRUE.toString());
+        parameters.put(Constants.USER_DIR_IS_ROOT, Boolean.FALSE.toString());
+        parameters.put(Constants.PASSIVE_MODE, Boolean.TRUE.toString());
         CountDownLatch latch = new CountDownLatch(1);
         RemoteFileSystemConnectorFactory connectorFactory = new RemoteFileSystemConnectorFactoryImpl();
         TestReadActionListener fileSystemListener = new TestReadActionListener(latch);
@@ -184,7 +180,7 @@ public class RemoteFileSystemClientConnectorTestCase {
                 connectorFactory.createVFSClientConnector(parameters, fileSystemListener);
         InputStream stream = new ByteArrayInputStream(newContent.getBytes(StandardCharsets.UTF_8));
         RemoteFileSystemMessage message = new RemoteFileSystemMessage(stream);
-        clientConnector.send(message);
+        clientConnector.send(message, FtpAction.PUT);
         latch.await(3, TimeUnit.SECONDS);
         FileEntry entry = (FileEntry) fileSystem.getEntry("/home/ballerina/file4.txt");
         InputStream inputStream = entry.createInputStream();
@@ -199,14 +195,12 @@ public class RemoteFileSystemClientConnectorTestCase {
     }
 
     @Test(description = "Check file content append.", dependsOnMethods = "fileContentReadTestCase")
-    public void fileContentAppendTestCase() throws ServerConnectorException, InterruptedException {
+    public void fileContentAppendTestCase() throws InterruptedException, RemoteFileSystemConnectorException {
         String newContent = " Sample text";
         Map<String, String> parameters = new HashMap<>();
         parameters.put(Constants.URI, buildConnectionURL() + "/file1.txt");
-        parameters.put(Constants.ACTION, Constants.PUT);
-        parameters.put(Constants.APPEND, String.valueOf(true));
-        parameters.put(Constants.PROTOCOL, Constants.PROTOCOL_FTP);
-        parameters.put(Constants.FTP_PASSIVE_MODE, Boolean.TRUE.toString());
+        parameters.put(Constants.USER_DIR_IS_ROOT, Boolean.FALSE.toString());
+        parameters.put(Constants.PASSIVE_MODE, Boolean.TRUE.toString());
         CountDownLatch latch = new CountDownLatch(1);
         RemoteFileSystemConnectorFactory connectorFactory = new RemoteFileSystemConnectorFactoryImpl();
         TestReadActionListener fileSystemListener = new TestReadActionListener(latch);
@@ -214,7 +208,7 @@ public class RemoteFileSystemClientConnectorTestCase {
                 connectorFactory.createVFSClientConnector(parameters, fileSystemListener);
         InputStream stream = new ByteArrayInputStream(newContent.getBytes(StandardCharsets.UTF_8));
         RemoteFileSystemMessage message = new RemoteFileSystemMessage(stream);
-        clientConnector.send(message);
+        clientConnector.send(message, FtpAction.APPEND);
         latch.await(3, TimeUnit.SECONDS);
         FileEntry entry = (FileEntry) fileSystem.getEntry("/home/ballerina/file1.txt");
         InputStream inputStream = entry.createInputStream();
@@ -229,133 +223,124 @@ public class RemoteFileSystemClientConnectorTestCase {
     }
 
     @Test(description = "Create new file.")
-    public void fileCreateTestCase() throws ServerConnectorException, InterruptedException {
-        String filePath = "/file3.txt";
+    public void fileCreateTestCase() throws InterruptedException, RemoteFileSystemConnectorException {
         Map<String, String> parameters = new HashMap<>();
+        String filePath = "/file3.txt";
         parameters.put(Constants.URI, buildConnectionURL() + filePath);
-        parameters.put(Constants.ACTION, Constants.MKDIR);
-        parameters.put(Constants.CREATE_FOLDER, String.valueOf(false));
-        parameters.put(Constants.PROTOCOL, Constants.PROTOCOL_FTP);
-        parameters.put(Constants.FTP_PASSIVE_MODE, Boolean.TRUE.toString());
+        parameters.put(Constants.USER_DIR_IS_ROOT, Boolean.FALSE.toString());
+        parameters.put(Constants.PASSIVE_MODE, Boolean.TRUE.toString());
         CountDownLatch latch = new CountDownLatch(1);
         RemoteFileSystemConnectorFactory connectorFactory = new RemoteFileSystemConnectorFactoryImpl();
         TestClientRemoteFileSystemListener fileSystemListener = new TestClientRemoteFileSystemListener(latch);
         VFSClientConnector clientConnector =
                 connectorFactory.createVFSClientConnector(parameters, fileSystemListener);
-        clientConnector.send(null);
+        clientConnector.send(null, FtpAction.MKDIR);
         latch.await(3, TimeUnit.SECONDS);
         Assert.assertTrue(fileSystem.exists(rootFolder + filePath), "File not created.");
     }
 
     @Test(description = "Trying to create file that already exists.", dependsOnMethods = "fileCreateTestCase")
-    public void existingFileCreateTestCase() throws ServerConnectorException, InterruptedException {
-        String filePath = "/file3.txt";
+    public void existingFileCreateTestCase() throws InterruptedException, RemoteFileSystemConnectorException {
         Map<String, String> parameters = new HashMap<>();
+        String filePath = "/file3.txt";
         parameters.put(Constants.URI, buildConnectionURL() + filePath);
-        parameters.put(Constants.ACTION, Constants.MKDIR);
-        parameters.put(Constants.CREATE_FOLDER, String.valueOf(false));
-        parameters.put(Constants.PROTOCOL, Constants.PROTOCOL_FTP);
-        parameters.put(Constants.FTP_PASSIVE_MODE, Boolean.TRUE.toString());
+        parameters.put(Constants.USER_DIR_IS_ROOT, Boolean.FALSE.toString());
+        parameters.put(Constants.PASSIVE_MODE, Boolean.TRUE.toString());
         CountDownLatch latch = new CountDownLatch(1);
         RemoteFileSystemConnectorFactory connectorFactory = new RemoteFileSystemConnectorFactoryImpl();
         TestClientRemoteFileSystemListener fileSystemListener = new TestClientRemoteFileSystemListener(latch);
         VFSClientConnector clientConnector =
                 connectorFactory.createVFSClientConnector(parameters, fileSystemListener);
-        clientConnector.send(null);
+        clientConnector.send(null, FtpAction.MKDIR);
         latch.await(3, TimeUnit.SECONDS);
         Assert.assertTrue(fileSystemListener.getThrowable() instanceof RemoteFileSystemConnectorException,
                 "Exception did not throw as expected.");
     }
 
     @Test(description = "Create new folder.")
-    public void folderCreateTestCase() throws ServerConnectorException, InterruptedException {
-        String filePath = "/folder";
+    public void folderCreateTestCase() throws InterruptedException, RemoteFileSystemConnectorException {
         Map<String, String> parameters = new HashMap<>();
+        String filePath = "/folder";
         parameters.put(Constants.URI, buildConnectionURL() + filePath);
-        parameters.put(Constants.ACTION, Constants.MKDIR);
-        parameters.put(Constants.CREATE_FOLDER, String.valueOf(true));
-        parameters.put(Constants.PROTOCOL, Constants.PROTOCOL_FTP);
-        parameters.put(Constants.FTP_PASSIVE_MODE, Boolean.TRUE.toString());
+        parameters.put(Constants.USER_DIR_IS_ROOT, Boolean.FALSE.toString());
+        parameters.put(Constants.PASSIVE_MODE, Boolean.TRUE.toString());
         CountDownLatch latch = new CountDownLatch(1);
         RemoteFileSystemConnectorFactory connectorFactory = new RemoteFileSystemConnectorFactoryImpl();
         TestClientRemoteFileSystemListener fileSystemListener = new TestClientRemoteFileSystemListener(latch);
         VFSClientConnector clientConnector =
                 connectorFactory.createVFSClientConnector(parameters, fileSystemListener);
-        clientConnector.send(null);
+        clientConnector.send(null, FtpAction.MKDIR);
         latch.await(3, TimeUnit.SECONDS);
         Assert.assertTrue(fileSystem.exists(rootFolder + filePath), "File not created.");
     }
 
     @Test(description = "Delete file.", dependsOnMethods = "fileCreateTestCase")
-    public void fileDeleteTestCase() throws ServerConnectorException, InterruptedException {
-        String filePath = "/file3.txt";
+    public void fileDeleteTestCase() throws InterruptedException, RemoteFileSystemConnectorException {
         Map<String, String> parameters = new HashMap<>();
+        String filePath = "/file3.txt";
         parameters.put(Constants.URI, buildConnectionURL() + filePath);
-        parameters.put(Constants.ACTION, Constants.DELETE);
-        parameters.put(Constants.PROTOCOL, Constants.PROTOCOL_FTP);
-        parameters.put(Constants.FTP_PASSIVE_MODE, Boolean.TRUE.toString());
+        parameters.put(Constants.USER_DIR_IS_ROOT, Boolean.FALSE.toString());
+        parameters.put(Constants.PASSIVE_MODE, Boolean.TRUE.toString());
         CountDownLatch latch = new CountDownLatch(1);
         RemoteFileSystemConnectorFactory connectorFactory = new RemoteFileSystemConnectorFactoryImpl();
         TestClientRemoteFileSystemListener fileSystemListener = new TestClientRemoteFileSystemListener(latch);
         VFSClientConnector clientConnector =
                 connectorFactory.createVFSClientConnector(parameters, fileSystemListener);
-        clientConnector.send(null);
+        clientConnector.send(null, FtpAction.DELETE);
         latch.await(3, TimeUnit.SECONDS);
         Assert.assertFalse(fileSystem.exists(rootFolder + filePath), "File not deleted.");
     }
 
     @Test(description = "Delete non exist file.", dependsOnMethods = "fileCreateTestCase")
-    public void deleteNonExistTestCase() throws ServerConnectorException, InterruptedException {
+    public void deleteNonExistTestCase() throws InterruptedException, RemoteFileSystemConnectorException {
         String filePath = "/non-exit.txt";
         Map<String, String> parameters = new HashMap<>();
         parameters.put(Constants.URI, buildConnectionURL() + filePath);
-        parameters.put(Constants.ACTION, Constants.DELETE);
-        parameters.put(Constants.PROTOCOL, Constants.PROTOCOL_FTP);
-        parameters.put(Constants.FTP_PASSIVE_MODE, Boolean.TRUE.toString());
+        parameters.put(Constants.USER_DIR_IS_ROOT, Boolean.FALSE.toString());
+        parameters.put(Constants.PASSIVE_MODE, Boolean.TRUE.toString());
         CountDownLatch latch = new CountDownLatch(1);
         RemoteFileSystemConnectorFactory connectorFactory = new RemoteFileSystemConnectorFactoryImpl();
         TestClientRemoteFileSystemListener fileSystemListener = new TestClientRemoteFileSystemListener(latch);
         VFSClientConnector clientConnector =
                 connectorFactory.createVFSClientConnector(parameters, fileSystemListener);
-        clientConnector.send(null);
+        clientConnector.send(null, FtpAction.DELETE);
         latch.await(3, TimeUnit.SECONDS);
         Assert.assertTrue(fileSystemListener.getThrowable() instanceof RemoteFileSystemConnectorException,
                 "Exception did not throw as expected.");
     }
 
     @Test(description = "File move.")
-    public void fileMoveTestCase() throws ServerConnectorException, InterruptedException {
+    public void fileMoveTestCase() throws InterruptedException, RemoteFileSystemConnectorException {
         Map<String, String> parameters = new HashMap<>();
-        parameters.put(Constants.ACTION, Constants.RENAME);
         parameters.put(Constants.URI, buildConnectionURL() + "/file2.txt");
         parameters.put(Constants.DESTINATION, buildConnectionURL() + "/move/file2-move.txt");
-        parameters.put(Constants.PROTOCOL, Constants.PROTOCOL_FTP);
-        parameters.put(Constants.FTP_PASSIVE_MODE, Boolean.TRUE.toString());
+        parameters.put(Constants.USER_DIR_IS_ROOT, Boolean.FALSE.toString());
+        parameters.put(Constants.PASSIVE_MODE, Boolean.TRUE.toString());
         CountDownLatch latch = new CountDownLatch(1);
         RemoteFileSystemConnectorFactory connectorFactory = new RemoteFileSystemConnectorFactoryImpl();
         TestClientRemoteFileSystemListener fileSystemListener = new TestClientRemoteFileSystemListener(latch);
         VFSClientConnector clientConnector =
                 connectorFactory.createVFSClientConnector(parameters, fileSystemListener);
-        clientConnector.send(null);
+        clientConnector.send(null, FtpAction.RENAME);
         latch.await(3, TimeUnit.SECONDS);
         Assert.assertTrue(fileSystem.exists(rootFolder + "/move/file2-move.txt"), "File not moved.");
         Assert.assertFalse(fileSystem.exists(rootFolder + "/file2.txt"), "File not moved.");
     }
 
     @Test(description = "File move with creating parent folder.")
-    public void fileMoveWithCreateParentFolderTestCase() throws ServerConnectorException, InterruptedException {
+    public void fileMoveWithCreateParentFolderTestCase() throws InterruptedException,
+            RemoteFileSystemConnectorException {
         Map<String, String> parameters = new HashMap<>();
-        parameters.put(Constants.ACTION, Constants.RENAME);
         parameters.put(Constants.URI, buildConnectionURL() + "/file10.txt");
         parameters.put(Constants.DESTINATION, buildConnectionURL() + "/newMoveFolder/file2-move.txt");
-        parameters.put(Constants.PROTOCOL, Constants.PROTOCOL_FTP);
-        parameters.put(Constants.FTP_PASSIVE_MODE, Boolean.TRUE.toString());
+        parameters.put(Constants.USER_DIR_IS_ROOT, Boolean.FALSE.toString());
+        parameters.put(Constants.PASSIVE_MODE, Boolean.TRUE.toString());
         CountDownLatch latch = new CountDownLatch(1);
         RemoteFileSystemConnectorFactory connectorFactory = new RemoteFileSystemConnectorFactoryImpl();
         TestClientRemoteFileSystemListener fileSystemListener = new TestClientRemoteFileSystemListener(latch);
         VFSClientConnector clientConnector =
                 connectorFactory.createVFSClientConnector(parameters, fileSystemListener);
-        clientConnector.send(null);
+        clientConnector.send(null, FtpAction.RENAME);
         latch.await(3, TimeUnit.SECONDS);
         Assert.assertTrue(fileSystem.exists(rootFolder + "/newMoveFolder/file2-move.txt"),
                 "File not moved.");
@@ -363,19 +348,19 @@ public class RemoteFileSystemClientConnectorTestCase {
     }
 
     @Test(description = "File move to already existing folder.", dependsOnMethods = "fileMoveTestCase")
-    public void fileMoveAlreadyExistingFolderTestCase() throws ServerConnectorException, InterruptedException {
+    public void fileMoveAlreadyExistingFolderTestCase() throws InterruptedException,
+            RemoteFileSystemConnectorException {
         Map<String, String> parameters = new HashMap<>();
-        parameters.put(Constants.ACTION, Constants.RENAME);
         parameters.put(Constants.URI, buildConnectionURL() + "/file11.txt");
         parameters.put(Constants.DESTINATION, buildConnectionURL() + "/move/file2-move.txt");
-        parameters.put(Constants.PROTOCOL, Constants.PROTOCOL_FTP);
-        parameters.put(Constants.FTP_PASSIVE_MODE, Boolean.TRUE.toString());
+        parameters.put(Constants.USER_DIR_IS_ROOT, Boolean.FALSE.toString());
+        parameters.put(Constants.PASSIVE_MODE, Boolean.TRUE.toString());
         CountDownLatch latch = new CountDownLatch(1);
         RemoteFileSystemConnectorFactory connectorFactory = new RemoteFileSystemConnectorFactoryImpl();
         TestClientRemoteFileSystemListener fileSystemListener = new TestClientRemoteFileSystemListener(latch);
         VFSClientConnector clientConnector =
                 connectorFactory.createVFSClientConnector(parameters, fileSystemListener);
-        clientConnector.send(null);
+        clientConnector.send(null, FtpAction.RENAME);
         latch.await(3, TimeUnit.SECONDS);
         Assert.assertTrue(fileSystem.exists(rootFolder + "/file11.txt"), "File moved.");
         Assert.assertTrue(fileSystemListener.getThrowable() instanceof RemoteFileSystemConnectorException,
@@ -383,19 +368,18 @@ public class RemoteFileSystemClientConnectorTestCase {
     }
 
     @Test(description = "Trying to move non existing file", dependsOnMethods = "fileMoveTestCase")
-    public void moveNonExistingFileTestCase() throws ServerConnectorException, InterruptedException {
+    public void moveNonExistingFileTestCase() throws InterruptedException, RemoteFileSystemConnectorException {
         Map<String, String> parameters = new HashMap<>();
-        parameters.put(Constants.ACTION, Constants.RENAME);
         parameters.put(Constants.URI, buildConnectionURL() + "/non-exist.txt");
         parameters.put(Constants.DESTINATION, buildConnectionURL() + "/move/file7-move.txt");
-        parameters.put(Constants.PROTOCOL, Constants.PROTOCOL_FTP);
-        parameters.put(Constants.FTP_PASSIVE_MODE, Boolean.TRUE.toString());
+        parameters.put(Constants.USER_DIR_IS_ROOT, Boolean.FALSE.toString());
+        parameters.put(Constants.PASSIVE_MODE, Boolean.TRUE.toString());
         CountDownLatch latch = new CountDownLatch(1);
         RemoteFileSystemConnectorFactory connectorFactory = new RemoteFileSystemConnectorFactoryImpl();
         TestClientRemoteFileSystemListener fileSystemListener = new TestClientRemoteFileSystemListener(latch);
         VFSClientConnector clientConnector =
                 connectorFactory.createVFSClientConnector(parameters, fileSystemListener);
-        clientConnector.send(null);
+        clientConnector.send(null, FtpAction.RENAME);
         latch.await(3, TimeUnit.SECONDS);
         Assert.assertFalse(fileSystem.exists(rootFolder + "/move/file7-move.txt"), "File moved.");
         Assert.assertTrue(fileSystemListener.getThrowable() instanceof RemoteFileSystemConnectorException,
