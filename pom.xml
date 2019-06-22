@@ -176,7 +176,7 @@
 
         <!-- Dependencies -->
         <org.wso2.carbon.core.version>5.1.0</org.wso2.carbon.core.version>
-        <org.wso2.carbon.connector.framework.version>6.0.50</org.wso2.carbon.connector.framework.version>
+        <org.wso2.carbon.connector.framework.version>6.0.52</org.wso2.carbon.connector.framework.version>
         <carbon.kernel.package.import.version.range>[5.0.0, 6.0.0)</carbon.kernel.package.import.version.range>
 
         <equinox.osgi.version>3.10.2.v20150203-1939</equinox.osgi.version>
