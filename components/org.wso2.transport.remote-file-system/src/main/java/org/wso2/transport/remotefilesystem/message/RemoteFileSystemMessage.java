@@ -20,6 +20,8 @@ package org.wso2.transport.remotefilesystem.message;
 
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.util.Collections;
+import java.util.Map;
 
 /**
  * This represent the message that hold payload and other attributes.
@@ -30,8 +32,12 @@ public class RemoteFileSystemMessage extends RemoteFileSystemBaseMessage {
     private InputStream inputStream;
     private String text;
     private long size;
-    private String[] childNames;
     private boolean directory;
+    private Map<String, FileInfo> childrenInfo;
+
+    public RemoteFileSystemMessage(final Map<String, FileInfo> childrenInfo) {
+        this.childrenInfo = Collections.unmodifiableMap(childrenInfo);
+    }
 
     public RemoteFileSystemMessage(ByteBuffer bytes) {
         this.bytes = bytes;
@@ -47,10 +53,6 @@ public class RemoteFileSystemMessage extends RemoteFileSystemBaseMessage {
 
     public RemoteFileSystemMessage(long size) {
         this.size = size;
-    }
-
-    public RemoteFileSystemMessage(final String[] childNames) {
-        this.childNames = childNames.clone();
     }
 
     public RemoteFileSystemMessage(boolean isDirectory) {
@@ -74,7 +76,11 @@ public class RemoteFileSystemMessage extends RemoteFileSystemBaseMessage {
     }
 
     public String[] getChildNames() {
-        return childNames.clone();
+        return (String[]) (childrenInfo.keySet()).toArray();
+    }
+
+    public Map<String, FileInfo> getChildrenInfo() {
+        return childrenInfo;
     }
 
     public boolean isDirectory() {
