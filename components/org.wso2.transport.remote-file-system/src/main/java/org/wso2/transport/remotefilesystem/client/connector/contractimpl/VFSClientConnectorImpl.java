@@ -31,6 +31,7 @@ import org.wso2.transport.remotefilesystem.client.connector.contract.FtpAction;
 import org.wso2.transport.remotefilesystem.client.connector.contract.VFSClientConnector;
 import org.wso2.transport.remotefilesystem.exception.RemoteFileSystemConnectorException;
 import org.wso2.transport.remotefilesystem.listener.RemoteFileSystemListener;
+import org.wso2.transport.remotefilesystem.message.FileInfo;
 import org.wso2.transport.remotefilesystem.message.RemoteFileSystemMessage;
 import org.wso2.transport.remotefilesystem.server.util.FileTransportUtils;
 
@@ -39,6 +40,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -167,13 +169,13 @@ public class VFSClientConnectorImpl implements VFSClientConnector {
                     remoteFileSystemListener.onMessage(new RemoteFileSystemMessage(path.getContent().getSize()));
                     break;
                 case LIST:
-                    final FileObject[] pathObjects = path.getChildren();
-                    String[] childrenNames = new String[pathObjects.length];
-                    int i = 0;
-                    for (FileObject child : pathObjects) {
-                        childrenNames[i++] = child.getName().getPath();
+                    final FileObject[] fileObjects = path.getChildren();
+                    Map<String, FileInfo> childrenInfo = new HashMap<>();
+                    for (FileObject fileObject : fileObjects) {
+                        FileInfo fileInfo = new FileInfo(fileObject);
+                        childrenInfo.put(fileInfo.getBaseName(), fileInfo);
                     }
-                    RemoteFileSystemMessage children = new RemoteFileSystemMessage(childrenNames);
+                    RemoteFileSystemMessage children = new RemoteFileSystemMessage(childrenInfo);
                     remoteFileSystemListener.onMessage(children);
                     break;
                 case ISDIR:
