@@ -76,7 +76,7 @@ public class RemoteFileSystemMessage extends RemoteFileSystemBaseMessage {
     }
 
     public String[] getChildNames() {
-        return (String[]) (childrenInfo.keySet()).toArray();
+        return (String[]) (childrenInfo.keySet()).toArray(new String[childrenInfo.keySet().size()]);
     }
 
     public Map<String, FileInfo> getChildrenInfo() {
