@@ -41,6 +41,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -79,6 +80,10 @@ public class VFSClientConnector implements ClientConnector {
         FtpFileSystemConfigBuilder.getInstance().setPassiveMode(opts, true);
         String fileURI = map.get(Constants.FILE_URI);
         String action = map.get(Constants.ACTION);
+        long readWaitTimeout = 1000;
+        if (null != map.get(Constants.FILE_READ_WAIT_TIMEOUT)) {
+            readWaitTimeout = Long.parseLong(map.get(Constants.FILE_READ_WAIT_TIMEOUT));
+        }
         FileType fileType;
         ByteBuffer byteBuffer;
         InputStream inputStream = null;
@@ -87,8 +92,7 @@ public class VFSClientConnector implements ClientConnector {
             FileSystemManager fsManager = VFS.getManager();
             FileObject path = fsManager.resolveFile(fileURI, opts);
             fileType = path.getType();
-            switch (action) {
-
+            switch (action.toLowerCase(Locale.ENGLISH)) {
                 case Constants.CREATE:
                     boolean isFolder = Boolean.parseBoolean(map.getOrDefault("create-folder", "false"));
                     if (path.exists()) {
@@ -168,11 +172,15 @@ public class VFSClientConnector implements ClientConnector {
                 case Constants.READ:
                     if (path.exists()) {
                         //TODO: Do not assume 'path' always refers to a file
-                        inputStream = path.getContent().getInputStream();
-                        byte[] bytes = toByteArray(inputStream);
+                        byte[] bytes;
+                        do {
+                            inputStream = path.getContent().getInputStream();
+                            bytes = toByteArray(inputStream);
+                            Thread.sleep(readWaitTimeout);
+                        } while (bytes.length != toByteArray(path.getContent().getInputStream()).length);
                         BinaryCarbonMessage message = new BinaryCarbonMessage(ByteBuffer.wrap(bytes), true);
                         message.setProperty(org.wso2.carbon.messaging.Constants.DIRECTION,
-                                            org.wso2.carbon.messaging.Constants.DIRECTION_RESPONSE);
+                                org.wso2.carbon.messaging.Constants.DIRECTION_RESPONSE);
                         carbonMessageProcessor.receive(message, carbonCallback);
                     } else {
                         throw new ClientConnectorException(

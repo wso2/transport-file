@@ -36,6 +36,8 @@ public final class Constants {
     public static final String MOVE = "move";
     public static final String READ = "read";
     public static final String EXISTS = "exists";
+    public static final String FILE_READ_WAIT_TIMEOUT = "fileReadWaitTimeout";
+
 
     // Constants for FTP protocol related configurations
     public static final String FTP_PASSIVE_MODE = "FTP_PASSIVE_MODE";

@@ -43,6 +43,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -150,7 +151,7 @@ public class RemoteFileSystemConsumer {
             fileProcessCount = Integer.parseInt(strProcessCount);
         }
         if (fileProperties.get(Constants.ACTION_AFTER_FAILURE) != null) {
-            switch (fileProperties.get(Constants.ACTION_AFTER_FAILURE)) {
+            switch (fileProperties.get(Constants.ACTION_AFTER_FAILURE).toUpperCase(Locale.ENGLISH)) {
                 case Constants.ACTION_MOVE:
                     postFailureAction = Constants.ACTION_MOVE;
                     break;
@@ -172,7 +173,7 @@ public class RemoteFileSystemConsumer {
             }
         }
         if (fileProperties.get(Constants.ACTION_AFTER_PROCESS) != null) {
-            switch (fileProperties.get(Constants.ACTION_AFTER_PROCESS)) {
+            switch (fileProperties.get(Constants.ACTION_AFTER_PROCESS).toUpperCase(Locale.ENGLISH)) {
                 case Constants.ACTION_MOVE:
                     postProcessAction = Constants.ACTION_MOVE;
                     break;

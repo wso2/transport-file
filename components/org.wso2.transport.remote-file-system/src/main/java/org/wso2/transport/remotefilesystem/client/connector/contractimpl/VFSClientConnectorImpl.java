@@ -39,6 +39,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -83,7 +84,7 @@ public class VFSClientConnectorImpl implements VFSClientConnector {
             FileSystemManager fsManager = VFS.getManager();
             path = fsManager.resolveFile(fileURI, opts);
             fileType = path.getType();
-            switch (action) {
+            switch (action.toLowerCase(Locale.ENGLISH)) {
                 case Constants.CREATE:
                     boolean isFolder = Boolean.parseBoolean(connectorConfig.getOrDefault(Constants.CREATE_FOLDER,
                             "false"));
