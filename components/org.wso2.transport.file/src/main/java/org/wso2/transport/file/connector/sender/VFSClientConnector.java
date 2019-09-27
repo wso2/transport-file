@@ -172,13 +172,14 @@ public class VFSClientConnector implements ClientConnector {
                 case Constants.READ:
                     if (path.exists()) {
                         //TODO: Do not assume 'path' always refers to a file
-                        byte[] bytes;
+                        long fileContentLastModifiedTime;
                         do {
-                            inputStream = path.getContent().getInputStream();
-                            bytes = toByteArray(inputStream);
+                            fileContentLastModifiedTime = path.getContent().getLastModifiedTime();
                             Thread.sleep(readWaitTimeout);
-                        } while (bytes.length != toByteArray(path.getContent().getInputStream()).length);
-                        BinaryCarbonMessage message = new BinaryCarbonMessage(ByteBuffer.wrap(bytes), true);
+                        } while (fileContentLastModifiedTime < path.getContent().getLastModifiedTime());
+                        inputStream = path.getContent().getInputStream();
+                        BinaryCarbonMessage message = new BinaryCarbonMessage(ByteBuffer.
+                                wrap(toByteArray(inputStream)), true);
                         message.setProperty(org.wso2.carbon.messaging.Constants.DIRECTION,
                                 org.wso2.carbon.messaging.Constants.DIRECTION_RESPONSE);
                         carbonMessageProcessor.receive(message, carbonCallback);
