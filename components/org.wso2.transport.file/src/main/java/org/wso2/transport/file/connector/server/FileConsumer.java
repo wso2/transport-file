@@ -268,10 +268,10 @@ public class FileConsumer {
                 if (ch == 10) {
                     Byte[] line = new Byte[list.size()];
                     line = list.toArray(line);
-                    EventListener.fileUpdated(line, messageProcessor, serviceName);
+                    rePos = pos + (long) i + 1L;
+                    EventListener.fileUpdated(line, messageProcessor, serviceName, rePos);
                     lines++;
                     list.clear();
-                    rePos = pos + (long) i + 1L;
                 } else {
                     list.add(ch);
                 }
@@ -295,7 +295,7 @@ public class FileConsumer {
 
     private static int read(RandomAccessContent reader, byte[] inbuf) throws IOException {
         InputStream is = reader.getInputStream();
-        int count  = is.read(inbuf);
+        int count = is.read(inbuf);
         return count;
     }
 
@@ -316,15 +316,15 @@ public class FileConsumer {
             }
         }
 
-        private static void fileUpdated(Byte[] content, CarbonMessageProcessor messageProcessor, String serviceName)
-                throws FileServerConnectorException {
+        private static void fileUpdated(Byte[] content, CarbonMessageProcessor messageProcessor, String serviceName,
+                                        long currentPosition) throws FileServerConnectorException {
             try {
                 CarbonMessage cMessage = new BinaryCarbonMessage(ByteBuffer.wrap(toPrimitives(content)), true);
                 cMessage.setProperty(org.wso2.carbon.messaging.Constants.PROTOCOL, Constants.PROTOCOL_FILE);
                 cMessage.setProperty(Constants.FILE_TRANSPORT_PROPERTY_SERVICE_NAME, serviceName);
                 cMessage.setProperty(Constants.FILE_TRANSPORT_EVENT_NAME, Constants.FILE_UPDATE);
                 cMessage.setProperty(Constants.SINGLE_THREADED_EXECUTION, serviceName);
-
+                cMessage.setProperty(Constants.CURRENT_POSITION, currentPosition);
                 messageProcessor.receive(cMessage, null);
             } catch (Exception e) {
                 throw new FileServerConnectorException("Failed to send event message processor. ", e);
