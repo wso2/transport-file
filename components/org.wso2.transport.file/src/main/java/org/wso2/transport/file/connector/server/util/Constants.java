@@ -33,6 +33,7 @@ public final class Constants {
     //file connector parameters
     public static final String TRANSPORT_FILE_FILE_PATH = "path";
     public static final String START_POSITION = "startPosition";
+    public static final String CURRENT_POSITION = "currentPosition";
     public static final String MAX_LINES_PER_POLL = "maxLinesPerPoll";
 
     public static final String SCHEME = "VFS_SCHEME";
