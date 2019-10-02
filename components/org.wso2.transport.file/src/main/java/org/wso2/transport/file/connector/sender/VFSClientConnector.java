@@ -35,14 +35,15 @@ import org.wso2.carbon.messaging.ClientConnector;
 import org.wso2.carbon.messaging.TextCarbonMessage;
 import org.wso2.carbon.messaging.exceptions.ClientConnectorException;
 
-import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Scanner;
 
 /**
  * A Client Connector implementation for file systems using the Apache VFS library for file operations
@@ -88,6 +89,7 @@ public class VFSClientConnector implements ClientConnector {
         ByteBuffer byteBuffer;
         InputStream inputStream = null;
         OutputStream outputStream = null;
+        Scanner scanner = null;
         try {
             FileSystemManager fsManager = VFS.getManager();
             FileObject path = fsManager.resolveFile(fileURI, opts);
@@ -178,11 +180,18 @@ public class VFSClientConnector implements ClientConnector {
                             Thread.sleep(readWaitTimeout);
                         } while (fileContentLastModifiedTime < path.getContent().getLastModifiedTime());
                         inputStream = path.getContent().getInputStream();
-                        BinaryCarbonMessage message = new BinaryCarbonMessage(ByteBuffer.
-                                wrap(toByteArray(inputStream)), true);
-                        message.setProperty(org.wso2.carbon.messaging.Constants.DIRECTION,
-                                org.wso2.carbon.messaging.Constants.DIRECTION_RESPONSE);
-                        carbonMessageProcessor.receive(message, carbonCallback);
+                        scanner = new Scanner(inputStream, "UTF-8");
+                        while (scanner.hasNextLine()) {
+                            String line = scanner.nextLine();
+                            BinaryCarbonMessage message = new BinaryCarbonMessage(ByteBuffer.
+                                    wrap(line.getBytes(StandardCharsets.UTF_8)), true);
+                            message.setProperty(org.wso2.carbon.messaging.Constants.DIRECTION,
+                                    org.wso2.carbon.messaging.Constants.DIRECTION_RESPONSE);
+                            carbonMessageProcessor.receive(message, carbonCallback);
+                        }
+                        if (scanner.ioException() != null) {
+                            throw scanner.ioException();
+                        }
                     } else {
                         throw new ClientConnectorException(
                                 "Failed to read file: " + path.getName().getURI() + " not found");
@@ -202,6 +211,7 @@ public class VFSClientConnector implements ClientConnector {
         } catch (Exception e) {
             throw new ClientConnectorException("Exception occurred while processing file: " + e.getMessage(), e);
         } finally {
+            closeQuietly(scanner);
             closeQuietly(inputStream);
             closeQuietly(outputStream);
         }
@@ -212,29 +222,6 @@ public class VFSClientConnector implements ClientConnector {
     public String getProtocol() {
         // TODO: Revisit this
         return Constants.PROTOCOL_FILE;
-    }
-
-    /**
-     * Obtain a byte[] from an input stream
-     *
-     * @param input The input stream that the data should be obtained from
-     * @return byte[] The byte array of data obtained from the input stream
-     * @throws IOException
-     */
-    private static byte[] toByteArray(InputStream input) throws IOException {
-        long count = 0L;
-        byte[] buffer = new byte[4096];
-        int n1;
-        ByteArrayOutputStream output = new ByteArrayOutputStream();
-        for (; -1 != (n1 = input.read(buffer)); count += (long) n1) {
-            output.write(buffer, 0, n1);
-        }
-        if (logger.isDebugEnabled()) {
-            logger.debug(count + " bytes read");
-        }
-        byte[] bytes = output.toByteArray();
-        closeQuietly(output);
-        return bytes;
     }
 
     /**
