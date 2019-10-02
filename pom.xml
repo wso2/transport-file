@@ -25,7 +25,7 @@
     <packaging>pom</packaging>
     <groupId>org.wso2.transport.file</groupId>
     <artifactId>file-parent</artifactId>
-    <version>6.0.58-SNAPSHOT</version>
+    <version>6.0.59-SNAPSHOT</version>
     <name>WSO2 Transport File Parent</name>
 
     <modules>
