@@ -35,12 +35,14 @@ import org.wso2.carbon.messaging.ClientConnector;
 import org.wso2.carbon.messaging.TextCarbonMessage;
 import org.wso2.carbon.messaging.exceptions.ClientConnectorException;
 
-import java.io.ByteArrayOutputStream;
+import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Locale;
 import java.util.Map;
 
@@ -86,8 +88,8 @@ public class VFSClientConnector implements ClientConnector {
         }
         FileType fileType;
         ByteBuffer byteBuffer;
-        InputStream inputStream = null;
         OutputStream outputStream = null;
+        BufferedReader bufferedReader = null;
         try {
             FileSystemManager fsManager = VFS.getManager();
             FileObject path = fsManager.resolveFile(fileURI, opts);
@@ -177,12 +179,15 @@ public class VFSClientConnector implements ClientConnector {
                             fileContentLastModifiedTime = path.getContent().getLastModifiedTime();
                             Thread.sleep(readWaitTimeout);
                         } while (fileContentLastModifiedTime < path.getContent().getLastModifiedTime());
-                        inputStream = path.getContent().getInputStream();
-                        BinaryCarbonMessage message = new BinaryCarbonMessage(ByteBuffer.
-                                wrap(toByteArray(inputStream)), true);
-                        message.setProperty(org.wso2.carbon.messaging.Constants.DIRECTION,
-                                org.wso2.carbon.messaging.Constants.DIRECTION_RESPONSE);
-                        carbonMessageProcessor.receive(message, carbonCallback);
+                        bufferedReader = Files.newBufferedReader(Paths.get(path.getURL().toURI()));
+                        String line;
+                        while ((line = bufferedReader.readLine()) != null) {
+                            BinaryCarbonMessage message = new BinaryCarbonMessage(ByteBuffer.
+                                    wrap(line.getBytes(StandardCharsets.UTF_8)), true);
+                            message.setProperty(org.wso2.carbon.messaging.Constants.DIRECTION,
+                                    org.wso2.carbon.messaging.Constants.DIRECTION_RESPONSE);
+                            carbonMessageProcessor.receive(message, carbonCallback);
+                        }
                     } else {
                         throw new ClientConnectorException(
                                 "Failed to read file: " + path.getName().getURI() + " not found");
@@ -202,7 +207,7 @@ public class VFSClientConnector implements ClientConnector {
         } catch (Exception e) {
             throw new ClientConnectorException("Exception occurred while processing file: " + e.getMessage(), e);
         } finally {
-            closeQuietly(inputStream);
+            closeQuietly(bufferedReader);
             closeQuietly(outputStream);
         }
         return true;
@@ -212,29 +217,6 @@ public class VFSClientConnector implements ClientConnector {
     public String getProtocol() {
         // TODO: Revisit this
         return Constants.PROTOCOL_FILE;
-    }
-
-    /**
-     * Obtain a byte[] from an input stream
-     *
-     * @param input The input stream that the data should be obtained from
-     * @return byte[] The byte array of data obtained from the input stream
-     * @throws IOException
-     */
-    private static byte[] toByteArray(InputStream input) throws IOException {
-        long count = 0L;
-        byte[] buffer = new byte[4096];
-        int n1;
-        ByteArrayOutputStream output = new ByteArrayOutputStream();
-        for (; -1 != (n1 = input.read(buffer)); count += (long) n1) {
-            output.write(buffer, 0, n1);
-        }
-        if (logger.isDebugEnabled()) {
-            logger.debug(count + " bytes read");
-        }
-        byte[] bytes = output.toByteArray();
-        closeQuietly(output);
-        return bytes;
     }
 
     /**
