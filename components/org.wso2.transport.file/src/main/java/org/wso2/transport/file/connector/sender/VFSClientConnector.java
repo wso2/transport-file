@@ -35,15 +35,16 @@ import org.wso2.carbon.messaging.ClientConnector;
 import org.wso2.carbon.messaging.TextCarbonMessage;
 import org.wso2.carbon.messaging.exceptions.ClientConnectorException;
 
+import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Scanner;
 
 /**
  * A Client Connector implementation for file systems using the Apache VFS library for file operations
@@ -87,9 +88,8 @@ public class VFSClientConnector implements ClientConnector {
         }
         FileType fileType;
         ByteBuffer byteBuffer;
-        InputStream inputStream = null;
         OutputStream outputStream = null;
-        Scanner scanner = null;
+        BufferedReader bufferedReader = null;
         try {
             FileSystemManager fsManager = VFS.getManager();
             FileObject path = fsManager.resolveFile(fileURI, opts);
@@ -179,18 +179,14 @@ public class VFSClientConnector implements ClientConnector {
                             fileContentLastModifiedTime = path.getContent().getLastModifiedTime();
                             Thread.sleep(readWaitTimeout);
                         } while (fileContentLastModifiedTime < path.getContent().getLastModifiedTime());
-                        inputStream = path.getContent().getInputStream();
-                        scanner = new Scanner(inputStream, "UTF-8");
-                        while (scanner.hasNextLine()) {
-                            String line = scanner.nextLine();
+                        bufferedReader = Files.newBufferedReader(Paths.get(path.getURL().toURI()));
+                        String line;
+                        while ((line = bufferedReader.readLine()) != null) {
                             BinaryCarbonMessage message = new BinaryCarbonMessage(ByteBuffer.
                                     wrap(line.getBytes(StandardCharsets.UTF_8)), true);
                             message.setProperty(org.wso2.carbon.messaging.Constants.DIRECTION,
                                     org.wso2.carbon.messaging.Constants.DIRECTION_RESPONSE);
                             carbonMessageProcessor.receive(message, carbonCallback);
-                        }
-                        if (scanner.ioException() != null) {
-                            throw scanner.ioException();
                         }
                     } else {
                         throw new ClientConnectorException(
@@ -211,8 +207,7 @@ public class VFSClientConnector implements ClientConnector {
         } catch (Exception e) {
             throw new ClientConnectorException("Exception occurred while processing file: " + e.getMessage(), e);
         } finally {
-            closeQuietly(scanner);
-            closeQuietly(inputStream);
+            closeQuietly(bufferedReader);
             closeQuietly(outputStream);
         }
         return true;
