@@ -25,6 +25,7 @@ public final class Constants {
 
     public static final String PROTOCOL_FILE = "file";
     public static final String PROTOCOL_FTP = "ftp";
+    public static final String BINARY_FILE_EXTENSION = "bin";
 
     public static final String APPEND = "append";
     public static final String FILE_URI = "uri";
@@ -37,6 +38,8 @@ public final class Constants {
     public static final String READ = "read";
     public static final String EXISTS = "exists";
     public static final String FILE_READ_WAIT_TIMEOUT = "fileReadWaitTimeout";
+    public static final String MODE = "mode";
+    public static final String MODE_TYPE_LINE = "line";
 
 
     // Constants for FTP protocol related configurations
