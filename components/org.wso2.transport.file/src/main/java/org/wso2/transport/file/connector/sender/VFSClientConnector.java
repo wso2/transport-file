@@ -106,7 +106,8 @@ public class VFSClientConnector implements ClientConnector {
                     if (isFolder) {
                         path.createFolder();
                     } else {
-                        path.createFile(); }
+                        path.createFile();
+                    }
                     break;
                 case Constants.WRITE:
                     if (!path.exists()) {
@@ -205,8 +206,7 @@ public class VFSClientConnector implements ClientConnector {
                                     message.setProperty(org.wso2.transport.file.connector.server.util.Constants.EOF,
                                             true);
                                 } else {
-                                    message.setProperty
-                                            (org.wso2.transport.file.connector.server.util.Constants.EOF,
+                                    message.setProperty(org.wso2.transport.file.connector.server.util.Constants.EOF,
                                                     false);
                                 }
                                 carbonMessageProcessor.receive(message, carbonCallback);
@@ -230,7 +230,7 @@ public class VFSClientConnector implements ClientConnector {
                     TextCarbonMessage message = new TextCarbonMessage(Boolean.toString(path.exists()));
                     message.setProperty(org.wso2.carbon.messaging.Constants.DIRECTION,
                             org.wso2.carbon.messaging.Constants.DIRECTION_RESPONSE);
-                    carbonMessageProcessor.receive(message , carbonCallback);
+                    carbonMessageProcessor.receive(message, carbonCallback);
                     break;
                 default:
                     return false;
