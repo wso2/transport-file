@@ -207,7 +207,7 @@ public class VFSClientConnector implements ClientConnector {
                                             true);
                                 } else {
                                     message.setProperty(org.wso2.transport.file.connector.server.util.Constants.EOF,
-                                                    false);
+                                            false);
                                 }
                                 carbonMessageProcessor.receive(message, carbonCallback);
                             }
