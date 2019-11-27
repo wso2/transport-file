@@ -167,7 +167,7 @@ public class VFSClientConnector implements ClientConnector {
                             path.moveTo(newPath);
                         } else {
                             throw new ClientConnectorException("The file at " + newPath.getURL().toString() +
-                                                                       " already exists or it is a directory");
+                                    " already exists or it is a directory");
                         }
                     } else {
                         throw new ClientConnectorException(
@@ -185,15 +185,30 @@ public class VFSClientConnector implements ClientConnector {
                         String filePath =  path.getName().getPath();
                         String fileExtension = filePath.substring(filePath.lastIndexOf(".") + 1);
                         String mode = map.get(Constants.MODE);
-                        if (mode != null && Constants.MODE_TYPE_LINE.equalsIgnoreCase(mode) &&
+                        if (Constants.MODE_TYPE_LINE.equalsIgnoreCase(mode) &&
                                 !fileExtension.equalsIgnoreCase(Constants.BINARY_FILE_EXTENSION)) {
                             bufferedReader = Files.newBufferedReader(Paths.get(filePath));
                             String line;
-                            while ((line = bufferedReader.readLine()) != null) {
-                                BinaryCarbonMessage message = new BinaryCarbonMessage(ByteBuffer.
+                            BinaryCarbonMessage message;
+                            line = bufferedReader.readLine();
+                            while (line != null) {
+                                message = new BinaryCarbonMessage(ByteBuffer.
                                         wrap(line.getBytes(StandardCharsets.UTF_8)), true);
                                 message.setProperty(org.wso2.carbon.messaging.Constants.DIRECTION,
                                         org.wso2.carbon.messaging.Constants.DIRECTION_RESPONSE);
+                                message.setProperty(org.wso2.transport.file.connector.server.util.Constants.FILE_PATH,
+                                        filePath);
+                                line = bufferedReader.readLine();
+                                while (line != null && line.isEmpty()) {
+                                    line = bufferedReader.readLine();
+                                }
+                                if (line == null) {
+                                    message.setProperty(org.wso2.transport.file.connector.server.util.Constants.EOF,
+                                            true);
+                                } else {
+                                    message.setProperty(org.wso2.transport.file.connector.server.util.Constants.EOF,
+                                            false);
+                                }
                                 carbonMessageProcessor.receive(message, carbonCallback);
                             }
                         } else {
@@ -202,6 +217,8 @@ public class VFSClientConnector implements ClientConnector {
                                     wrap(toByteArray(inputStream)), true);
                             message.setProperty(org.wso2.carbon.messaging.Constants.DIRECTION,
                                     org.wso2.carbon.messaging.Constants.DIRECTION_RESPONSE);
+                            message.setProperty(org.wso2.transport.file.connector.server.util.Constants.FILE_PATH,
+                                    filePath);
                             carbonMessageProcessor.receive(message, carbonCallback);
                         }
                     } else {
@@ -212,7 +229,7 @@ public class VFSClientConnector implements ClientConnector {
                 case Constants.EXISTS:
                     TextCarbonMessage message = new TextCarbonMessage(Boolean.toString(path.exists()));
                     message.setProperty(org.wso2.carbon.messaging.Constants.DIRECTION,
-                                        org.wso2.carbon.messaging.Constants.DIRECTION_RESPONSE);
+                            org.wso2.carbon.messaging.Constants.DIRECTION_RESPONSE);
                     carbonMessageProcessor.receive(message, carbonCallback);
                     break;
                 default:

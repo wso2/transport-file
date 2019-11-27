@@ -49,6 +49,8 @@ public final class Constants {
     public static final String FILE_UPDATE = "FILE_UPDATE";
     public static final String FILE_ROTATE = "FILE_ROTATE";
     public static final String FILE_TRANSPORT_EVENT_NAME = "FILE_TRANSPORT_EVENT_NAME";
+    public static final String FILE_PATH = "file.path";
+    public static final String EOF = "eof";
 
     private Constants() {
     }
