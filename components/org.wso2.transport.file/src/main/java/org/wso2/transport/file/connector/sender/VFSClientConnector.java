@@ -106,8 +106,7 @@ public class VFSClientConnector implements ClientConnector {
                     if (isFolder) {
                         path.createFolder();
                     } else {
-                        path.createFile();
-                    }
+                        path.createFile(); }
                     break;
                 case Constants.WRITE:
                     if (!path.exists()) {
@@ -196,18 +195,19 @@ public class VFSClientConnector implements ClientConnector {
                                         wrap(line.getBytes(StandardCharsets.UTF_8)), true);
                                 message.setProperty(org.wso2.carbon.messaging.Constants.DIRECTION,
                                         org.wso2.carbon.messaging.Constants.DIRECTION_RESPONSE);
-                                message.setProperty
-                                        (org.wso2.transport.file.connector.server.util.Constants.FILE_PATH , filePath);
+                                message.setProperty(org.wso2.transport.file.connector.server.util.Constants.FILE_PATH,
+                                        filePath);
                                 line = bufferedReader.readLine();
                                 while (line != null && line.isEmpty()) {
                                     line = bufferedReader.readLine();
                                 }
                                 if (line == null) {
-                                    message.setProperty
-                                            (org.wso2.transport.file.connector.server.util.Constants.EOF , true);
+                                    message.setProperty(org.wso2.transport.file.connector.server.util.Constants.EOF,
+                                            true);
                                 } else {
                                     message.setProperty
-                                            (org.wso2.transport.file.connector.server.util.Constants.EOF , false);
+                                            (org.wso2.transport.file.connector.server.util.Constants.EOF,
+                                                    false);
                                 }
                                 carbonMessageProcessor.receive(message, carbonCallback);
                             }
@@ -217,8 +217,8 @@ public class VFSClientConnector implements ClientConnector {
                                     wrap(toByteArray(inputStream)), true);
                             message.setProperty(org.wso2.carbon.messaging.Constants.DIRECTION,
                                     org.wso2.carbon.messaging.Constants.DIRECTION_RESPONSE);
-                            message.setProperty
-                                    (org.wso2.transport.file.connector.server.util.Constants.FILE_PATH , filePath);
+                            message.setProperty(org.wso2.transport.file.connector.server.util.Constants.FILE_PATH,
+                                    filePath);
                             carbonMessageProcessor.receive(message, carbonCallback);
                         }
                     } else {
