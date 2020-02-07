@@ -40,6 +40,7 @@ public final class Constants {
     public static final String FILE_READ_WAIT_TIMEOUT = "fileReadWaitTimeout";
     public static final String MODE = "mode";
     public static final String MODE_TYPE_LINE = "line";
+    public static final String HEADER_PRESENT = "header.present";
 
 
     // Constants for FTP protocol related configurations

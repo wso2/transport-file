@@ -187,6 +187,7 @@ public class VFSClientConnector implements ClientConnector {
                         String mode = map.get(Constants.MODE);
                         if (Constants.MODE_TYPE_LINE.equalsIgnoreCase(mode) &&
                                 !fileExtension.equalsIgnoreCase(Constants.BINARY_FILE_EXTENSION)) {
+                            boolean headerSkipped = !Boolean.parseBoolean(map.get(Constants.HEADER_PRESENT));
                             bufferedReader = Files.newBufferedReader(Paths.get(filePath));
                             String line;
                             BinaryCarbonMessage message;
@@ -209,7 +210,10 @@ public class VFSClientConnector implements ClientConnector {
                                     message.setProperty(org.wso2.transport.file.connector.server.util.Constants.EOF,
                                             false);
                                 }
-                                carbonMessageProcessor.receive(message, carbonCallback);
+                                if (headerSkipped) {
+                                    carbonMessageProcessor.receive(message, carbonCallback);
+                                }
+                                headerSkipped = true;
                             }
                         } else {
                             inputStream = path.getContent().getInputStream();
