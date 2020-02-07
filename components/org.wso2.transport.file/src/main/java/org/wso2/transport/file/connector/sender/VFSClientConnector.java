@@ -212,8 +212,9 @@ public class VFSClientConnector implements ClientConnector {
                                 }
                                 if (headerSkipped) {
                                     carbonMessageProcessor.receive(message, carbonCallback);
+                                } else {
+                                    headerSkipped = true;
                                 }
-                                headerSkipped = true;
                             }
                         } else {
                             inputStream = path.getContent().getInputStream();
