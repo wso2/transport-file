@@ -37,7 +37,6 @@ public final class Constants {
     public static final String MOVE = "move";
     public static final String READ = "read";
     public static final String EXISTS = "exists";
-    public static final String SIZE = "size";
     public static final String FILE_READ_WAIT_TIMEOUT = "fileReadWaitTimeout";
     public static final String MODE = "mode";
     public static final String MODE_TYPE_LINE = "line";
