@@ -182,7 +182,7 @@ public class VFSClientConnector implements ClientConnector {
                             fileContentLastModifiedTime = path.getContent().getLastModifiedTime();
                             Thread.sleep(readWaitTimeout);
                         } while (fileContentLastModifiedTime < path.getContent().getLastModifiedTime());
-                        String filePath =  path.getName().getPath();
+                        String filePath = path.getName().getPath();
                         String fileExtension = filePath.substring(filePath.lastIndexOf(".") + 1);
                         String mode = map.get(Constants.MODE);
                         if (Constants.MODE_TYPE_LINE.equalsIgnoreCase(mode) &&
@@ -194,18 +194,18 @@ public class VFSClientConnector implements ClientConnector {
                             BinaryCarbonMessage message;
                             line = bufferedReader.readLine();
                             if (readOnlyHeader && line != null) {
-                                    message = new BinaryCarbonMessage(ByteBuffer.
-                                            wrap(line.getBytes(StandardCharsets.UTF_8)), true);
-                                    message.setProperty(org.wso2.carbon.messaging.Constants.DIRECTION,
-                                            org.wso2.carbon.messaging.Constants.DIRECTION_RESPONSE);
-                                    message.setProperty(
-                                            org.wso2.transport.file.connector.server.util.Constants.FILE_PATH,
-                                            filePath);
-                                    message.setProperty(
-                                    org.wso2.transport.file.connector.server.util.Constants.EOF,
-                                            true);
-                                    carbonMessageProcessor.receive(message, carbonCallback);
-                                } else {
+                                message = new BinaryCarbonMessage(ByteBuffer.
+                                        wrap(line.getBytes(StandardCharsets.UTF_8)), true);
+                                message.setProperty(org.wso2.carbon.messaging.Constants.DIRECTION,
+                                        org.wso2.carbon.messaging.Constants.DIRECTION_RESPONSE);
+                                message.setProperty(
+                                        org.wso2.transport.file.connector.server.util.Constants.FILE_PATH,
+                                        filePath);
+                                message.setProperty(
+                                        org.wso2.transport.file.connector.server.util.Constants.EOF,
+                                        true);
+                                carbonMessageProcessor.receive(message, carbonCallback);
+                            } else {
                                 while (line != null) {
                                     message = new BinaryCarbonMessage(ByteBuffer.
                                             wrap(line.getBytes(StandardCharsets.UTF_8)), true);
@@ -299,6 +299,7 @@ public class VFSClientConnector implements ClientConnector {
 
     /**
      * Closes streams quietly
+     *
      * @param closeable The stream that should be closed
      */
     private static void closeQuietly(Closeable closeable) {
