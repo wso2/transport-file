@@ -45,6 +45,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Locale;
 import java.util.Map;
 
@@ -234,13 +235,47 @@ public class VFSClientConnector implements ClientConnector {
                             }
                         } else {
                             inputStream = path.getContent().getInputStream();
-                            BinaryCarbonMessage message = new BinaryCarbonMessage(ByteBuffer.
-                                    wrap(toByteArray(inputStream)), true);
-                            message.setProperty(org.wso2.carbon.messaging.Constants.DIRECTION,
-                                    org.wso2.carbon.messaging.Constants.DIRECTION_RESPONSE);
-                            message.setProperty(org.wso2.transport.file.connector.server.util.Constants.FILE_PATH,
-                                    filePath);
-                            carbonMessageProcessor.receive(message, carbonCallback);
+
+                            // Read a file in BINARY_FULL mode
+//                            BinaryCarbonMessage message = new BinaryCarbonMessage(ByteBuffer.
+//                                    wrap(toByteArray(inputStream)), true);
+//                            message.setProperty(org.wso2.carbon.messaging.Constants.DIRECTION,
+//                                    org.wso2.carbon.messaging.Constants.DIRECTION_RESPONSE);
+//                            message.setProperty(org.wso2.transport.file.connector.server.util.Constants.FILE_PATH,
+//                                    filePath);
+//                            carbonMessageProcessor.receive(message, carbonCallback);
+
+                            // ------------------------------------
+
+                            // Read a file in BINARY_CHUNKED mode
+                            long size = path.getContent().getSize();
+                            int bufferSize = Integer.parseInt(map.getOrDefault("buffer.size", "4096"));
+                            logger.info(">>> Reading the mode in BINARY_CHUNKED mode. Chunk size: " + bufferSize +
+                                    " bytes, Size: " + size + " bytes.");
+
+                            byte[] buffer = new byte[bufferSize];
+                            long count = 0L;
+                            int n1;
+                            for(; (n1 = inputStream.read(buffer)) != -1; count += (long) n1) {
+                                // Adjust the buffer size if the read bytes are less than the buffer size.
+                                if (n1 != buffer.length) {
+                                    buffer = Arrays.copyOfRange(buffer, 0, n1);
+                                }
+
+                                BinaryCarbonMessage message = new BinaryCarbonMessage(
+                                        ByteBuffer.wrap(buffer), true);
+                                message.setProperty(org.wso2.carbon.messaging.Constants.DIRECTION,
+                                        org.wso2.carbon.messaging.Constants.DIRECTION_RESPONSE);
+                                message.setProperty(org.wso2.transport.file.connector.server.util.Constants.FILE_PATH,
+                                        filePath);
+                                carbonMessageProcessor.receive(message, carbonCallback);
+                                buffer = new byte[bufferSize];
+//                                Thread.sleep(1);
+
+                                System.out.print("\rCompleted: " + Math.ceil((count * 100) / size) + "%");
+                            }
+                            System.out.print("\rCompleted: 100%\n");
+                            logger.info(">>> File reading completed.");
                         }
                     } else {
                         throw new ClientConnectorException(
