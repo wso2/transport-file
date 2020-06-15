@@ -233,49 +233,49 @@ public class VFSClientConnector implements ClientConnector {
                                     }
                                 }
                             }
-                        } else {
+                        } else if (Constants.MODE_TYPE_BINARY_CHUNKED.equalsIgnoreCase(mode)) {
                             inputStream = path.getContent().getInputStream();
-
-                            // Read a file in BINARY_FULL mode
-//                            BinaryCarbonMessage message = new BinaryCarbonMessage(ByteBuffer.
-//                                    wrap(toByteArray(inputStream)), true);
-//                            message.setProperty(org.wso2.carbon.messaging.Constants.DIRECTION,
-//                                    org.wso2.carbon.messaging.Constants.DIRECTION_RESPONSE);
-//                            message.setProperty(org.wso2.transport.file.connector.server.util.Constants.FILE_PATH,
-//                                    filePath);
-//                            carbonMessageProcessor.receive(message, carbonCallback);
-
-                            // ------------------------------------
-
                             // Read a file in BINARY_CHUNKED mode
                             long size = path.getContent().getSize();
-                            int bufferSize = Integer.parseInt(map.getOrDefault("buffer.size", "4096"));
-                            logger.info(">>> Reading the mode in BINARY_CHUNKED mode. Chunk size: " + bufferSize +
-                                    " bytes, Size: " + size + " bytes.");
-
+                            int bufferSize = Integer.parseInt(map.get(Constants.BUFFER_SIZE_IN_BINARY_CHUNKED));
+                            logger.debug("Reading " + path.getName() + " on " + mode + ". Chunk size: " + bufferSize +
+                                    " bytes, File size: " + size + " bytes.");
                             byte[] buffer = new byte[bufferSize];
-                            long count = 0L;
+                            int sequenceNumber = 1;
                             int n1;
-                            for(; (n1 = inputStream.read(buffer)) != -1; count += (long) n1) {
+                            BinaryCarbonMessage message;
+                            bufferedReader = Files.newBufferedReader(Paths.get(filePath));
+                            while ((n1 = inputStream.read(buffer)) != -1) {
                                 // Adjust the buffer size if the read bytes are less than the buffer size.
                                 if (n1 != buffer.length) {
                                     buffer = Arrays.copyOfRange(buffer, 0, n1);
                                 }
-
-                                BinaryCarbonMessage message = new BinaryCarbonMessage(
-                                        ByteBuffer.wrap(buffer), true);
+                                message = new BinaryCarbonMessage(ByteBuffer.
+                                        wrap(buffer), true);
                                 message.setProperty(org.wso2.carbon.messaging.Constants.DIRECTION,
                                         org.wso2.carbon.messaging.Constants.DIRECTION_RESPONSE);
-                                message.setProperty(org.wso2.transport.file.connector.server.util.Constants.FILE_PATH,
-                                        filePath);
+                                message.setProperty(org.wso2.transport.file.connector.server.util.Constants.FILE_NAME,
+                                        path.getName().getBaseName());
+                                message.setProperty(
+                                        org.wso2.transport.file.connector.server.util.Constants.CONTENT_LENGTH, size);
+                                message.setProperty(
+                                        org.wso2.transport.file.connector.server.util.Constants.SEQUENCE_NUMBER,
+                                        sequenceNumber++);
+                                message.setProperty(org.wso2.transport.file.connector.server.util.Constants.EOF,
+                                        !(inputStream.available() > 0));
                                 carbonMessageProcessor.receive(message, carbonCallback);
                                 buffer = new byte[bufferSize];
-//                                Thread.sleep(1);
-
-                                System.out.print("\rCompleted: " + Math.ceil((count * 100) / size) + "%");
                             }
-                            System.out.print("\rCompleted: 100%\n");
-                            logger.info(">>> File reading completed.");
+                            logger.debug("Reading " + path.getPublicURIString() + " is completed.");
+                        } else {
+                            inputStream = path.getContent().getInputStream();
+                            BinaryCarbonMessage message = new BinaryCarbonMessage(ByteBuffer.
+                                    wrap(toByteArray(inputStream)), true);
+                            message.setProperty(org.wso2.carbon.messaging.Constants.DIRECTION,
+                                    org.wso2.carbon.messaging.Constants.DIRECTION_RESPONSE);
+                            message.setProperty(org.wso2.transport.file.connector.server.util.Constants.FILE_PATH,
+                                    filePath);
+                            carbonMessageProcessor.receive(message, carbonCallback);
                         }
                     } else {
                         throw new ClientConnectorException(

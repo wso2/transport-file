@@ -40,8 +40,10 @@ public final class Constants {
     public static final String FILE_READ_WAIT_TIMEOUT = "fileReadWaitTimeout";
     public static final String MODE = "mode";
     public static final String MODE_TYPE_LINE = "line";
+    public static final String MODE_TYPE_BINARY_CHUNKED = "binary.chunked";
     public static final String HEADER_PRESENT = "header.present";
     public static final String READ_ONLY_HEADER = "read.only.header";
+    public static final String BUFFER_SIZE_IN_BINARY_CHUNKED = "buffer.size";
 
     // Constants for FTP protocol related configurations
     public static final String FTP_PASSIVE_MODE = "FTP_PASSIVE_MODE";
