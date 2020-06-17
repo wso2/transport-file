@@ -242,13 +242,13 @@ public class VFSClientConnector implements ClientConnector {
                                     " bytes, File size: " + size + " bytes.");
                             byte[] buffer = new byte[bufferSize];
                             int sequenceNumber = 1;
-                            int n1;
+                            int readLength;
                             BinaryCarbonMessage message;
                             bufferedReader = Files.newBufferedReader(Paths.get(filePath));
-                            while ((n1 = inputStream.read(buffer)) != -1) {
+                            while ((readLength = inputStream.read(buffer)) != -1) {
                                 // Adjust the buffer size if the read bytes are less than the buffer size.
-                                if (n1 != buffer.length) {
-                                    buffer = Arrays.copyOfRange(buffer, 0, n1);
+                                if (readLength != buffer.length) {
+                                    buffer = Arrays.copyOfRange(buffer, 0, readLength);
                                 }
                                 message = new BinaryCarbonMessage(ByteBuffer.
                                         wrap(buffer), true);
