@@ -50,7 +50,13 @@ public final class Constants {
     public static final String FILE_ROTATE = "FILE_ROTATE";
     public static final String FILE_TRANSPORT_EVENT_NAME = "FILE_TRANSPORT_EVENT_NAME";
     public static final String FILE_PATH = "file.path";
+
+    //Transport properties in BINARY.CHUNKED mode
+    public static final String FILE_NAME = "file.name";
     public static final String EOF = "eof";
+    public static final String CONTENT_LENGTH = "content.length";
+    public static final String SEQUENCE_NUMBER = "sequence.number";
+
 
     private Constants() {
     }

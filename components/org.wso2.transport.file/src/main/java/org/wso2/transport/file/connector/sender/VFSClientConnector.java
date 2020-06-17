@@ -45,6 +45,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Locale;
 import java.util.Map;
 
@@ -232,6 +233,40 @@ public class VFSClientConnector implements ClientConnector {
                                     }
                                 }
                             }
+                        } else if (Constants.MODE_TYPE_BINARY_CHUNKED.equalsIgnoreCase(mode)) {
+                            inputStream = path.getContent().getInputStream();
+                            // Read a file in BINARY_CHUNKED mode
+                            long size = path.getContent().getSize();
+                            int bufferSize = Integer.parseInt(map.get(Constants.BUFFER_SIZE_IN_BINARY_CHUNKED));
+                            logger.debug("Reading " + path.getName() + " on " + mode + ". Chunk size: " + bufferSize +
+                                    " bytes, File size: " + size + " bytes.");
+                            byte[] buffer = new byte[bufferSize];
+                            int sequenceNumber = 1;
+                            int readLength;
+                            BinaryCarbonMessage message;
+                            bufferedReader = Files.newBufferedReader(Paths.get(filePath));
+                            while ((readLength = inputStream.read(buffer)) != -1) {
+                                // Adjust the buffer size if the read bytes are less than the buffer size.
+                                if (readLength != buffer.length) {
+                                    buffer = Arrays.copyOfRange(buffer, 0, readLength);
+                                }
+                                message = new BinaryCarbonMessage(ByteBuffer.
+                                        wrap(buffer), true);
+                                message.setProperty(org.wso2.carbon.messaging.Constants.DIRECTION,
+                                        org.wso2.carbon.messaging.Constants.DIRECTION_RESPONSE);
+                                message.setProperty(org.wso2.transport.file.connector.server.util.Constants.FILE_NAME,
+                                        path.getName().getBaseName());
+                                message.setProperty(
+                                        org.wso2.transport.file.connector.server.util.Constants.CONTENT_LENGTH, size);
+                                message.setProperty(
+                                        org.wso2.transport.file.connector.server.util.Constants.SEQUENCE_NUMBER,
+                                        sequenceNumber++);
+                                message.setProperty(org.wso2.transport.file.connector.server.util.Constants.EOF,
+                                        !(inputStream.available() > 0));
+                                carbonMessageProcessor.receive(message, carbonCallback);
+                                buffer = new byte[bufferSize];
+                            }
+                            logger.debug("Reading " + path.getPublicURIString() + " is completed.");
                         } else {
                             inputStream = path.getContent().getInputStream();
                             BinaryCarbonMessage message = new BinaryCarbonMessage(ByteBuffer.
