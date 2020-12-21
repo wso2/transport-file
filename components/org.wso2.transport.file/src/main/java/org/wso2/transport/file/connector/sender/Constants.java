@@ -25,6 +25,7 @@ public final class Constants {
 
     public static final String PROTOCOL_FILE = "file";
     public static final String PROTOCOL_FTP = "ftp";
+    public static final String PROTOCOL_SFTP = "sftp";
     public static final String BINARY_FILE_EXTENSION = "bin";
 
     public static final String APPEND = "append";
@@ -47,6 +48,10 @@ public final class Constants {
 
     // Constants for FTP protocol related configurations
     public static final String FTP_PASSIVE_MODE = "FTP_PASSIVE_MODE";
+    public static final String USER_DIR_IS_ROOT = "USER_DIR_IS_ROOT";
+    public static final String IDENTITY = "IDENTITY";
+    public static final String IDENTITY_PASS_PHRASE = "IDENTITY_PASS_PHRASE";
+    public static final String AVOID_PERMISSION_CHECK = "AVOID_PERMISSION_CHECK";
 
     private Constants() {
     }
