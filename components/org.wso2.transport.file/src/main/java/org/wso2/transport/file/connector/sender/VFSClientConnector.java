@@ -230,7 +230,7 @@ public class VFSClientConnector implements ClientConnector {
                         String scheme = UriParser.extractScheme(fileURI);
                         String filePath;
                         String fileExtension;
-                        if (scheme.equals(Constants.PROTOCOL_FILE)) {
+                        if (scheme == null || scheme.equals(Constants.PROTOCOL_FILE)) {
                             filePath = path.getName().getPath();
                             fileExtension = filePath.substring(filePath.lastIndexOf(".") + 1);
                             bufferedReader = Files.newBufferedReader(Paths.get(filePath));
