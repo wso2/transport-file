@@ -19,12 +19,16 @@
 package org.wso2.transport.file.connector.sender;
 
 import org.apache.commons.vfs2.FileObject;
+import org.apache.commons.vfs2.FileSystemException;
 import org.apache.commons.vfs2.FileSystemManager;
 import org.apache.commons.vfs2.FileSystemOptions;
 import org.apache.commons.vfs2.FileType;
 import org.apache.commons.vfs2.Selectors;
 import org.apache.commons.vfs2.VFS;
+import org.apache.commons.vfs2.provider.UriParser;
 import org.apache.commons.vfs2.provider.ftp.FtpFileSystemConfigBuilder;
+import org.apache.commons.vfs2.provider.sftp.IdentityInfo;
+import org.apache.commons.vfs2.provider.sftp.SftpFileSystemConfigBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wso2.carbon.messaging.BinaryCarbonMessage;
@@ -38,8 +42,10 @@ import org.wso2.carbon.messaging.exceptions.ClientConnectorException;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -62,12 +68,51 @@ public class VFSClientConnector implements ClientConnector {
             throws ClientConnectorException {
         //TODO: Handle FS options configuration for other protocols as well
         if (Constants.PROTOCOL_FTP.equals(properties.get("PROTOCOL"))) {
-            properties.forEach((property, value) -> {
-                // TODO: Add support for other FTP related configurations
-                if (Constants.FTP_PASSIVE_MODE.equals(property)) {
-                    FtpFileSystemConfigBuilder.getInstance().setPassiveMode(opts, (Boolean) value);
+            if (properties.get(Constants.FTP_PASSIVE_MODE) != null) {
+                FtpFileSystemConfigBuilder.getInstance().setPassiveMode
+                        (opts, Boolean.parseBoolean(properties.get(Constants.FTP_PASSIVE_MODE).toString()));
+            } else {
+                FtpFileSystemConfigBuilder.getInstance().setPassiveMode(opts, true);
+            }
+            if (properties.get(Constants.USER_DIR_IS_ROOT) != null) {
+                FtpFileSystemConfigBuilder.getInstance().setUserDirIsRoot
+                        (opts, Boolean.parseBoolean(properties.get(Constants.USER_DIR_IS_ROOT).toString()));
+            } else {
+                FtpFileSystemConfigBuilder.getInstance().setUserDirIsRoot
+                        (opts, true);
+            }
+        }
+        if (Constants.PROTOCOL_SFTP.equals(properties.get("PROTOCOL"))) {
+            if (properties.get(Constants.USER_DIR_IS_ROOT) != null) {
+                SftpFileSystemConfigBuilder.getInstance().setUserDirIsRoot
+                        (opts, Boolean.parseBoolean(properties.get(Constants.USER_DIR_IS_ROOT).toString()));
+            } else {
+                FtpFileSystemConfigBuilder.getInstance().setUserDirIsRoot
+                        (opts, true);
+            }
+            if (properties.get(Constants.IDENTITY) != null) {
+                try {
+                    SftpFileSystemConfigBuilder.getInstance().setIdentityInfo
+                            (opts, new IdentityInfo(new File(properties.get(Constants.IDENTITY).toString())));
+                } catch (FileSystemException e) {
+                    throw new ClientConnectorException(e.getMessage(), e);
                 }
-            });
+            }
+            if (properties.get(Constants.IDENTITY_PASS_PHRASE) != null) {
+                try {
+                    SftpFileSystemConfigBuilder.getInstance().setIdentityPassPhrase
+                            (opts, properties.get(Constants.IDENTITY_PASS_PHRASE).toString());
+                } catch (FileSystemException e) {
+                    throw new ClientConnectorException(e.getMessage(), e);
+                }
+            }
+            if (properties.get(Constants.AVOID_PERMISSION_CHECK) != null) {
+                SftpFileSystemConfigBuilder.getInstance().setAvoidPermissionCheck
+                        (opts, properties.get(Constants.AVOID_PERMISSION_CHECK).toString());
+            }  else {
+                SftpFileSystemConfigBuilder.getInstance().setAvoidPermissionCheck
+                        (opts, "true");
+            }
         }
 
         return Boolean.TRUE;
@@ -82,7 +127,6 @@ public class VFSClientConnector implements ClientConnector {
     @Override
     public boolean send(CarbonMessage carbonMessage, CarbonCallback carbonCallback, Map<String, String> map)
             throws ClientConnectorException {
-        FtpFileSystemConfigBuilder.getInstance().setPassiveMode(opts, true);
         String fileURI = map.get(Constants.FILE_URI);
         String action = map.get(Constants.ACTION);
         long readWaitTimeout = 1000;
@@ -183,14 +227,26 @@ public class VFSClientConnector implements ClientConnector {
                             fileContentLastModifiedTime = path.getContent().getLastModifiedTime();
                             Thread.sleep(readWaitTimeout);
                         } while (fileContentLastModifiedTime < path.getContent().getLastModifiedTime());
-                        String filePath = path.getName().getPath();
-                        String fileExtension = filePath.substring(filePath.lastIndexOf(".") + 1);
+                        String scheme = UriParser.extractScheme(fileURI);
+                        String filePath;
+                        String fileExtension;
+                        if (scheme.equals(Constants.PROTOCOL_FILE)) {
+                            filePath = path.getName().getPath();
+                            fileExtension = filePath.substring(filePath.lastIndexOf(".") + 1);
+                            bufferedReader = Files.newBufferedReader(Paths.get(filePath));
+                        } else {
+                            String fileName = path.getName().getBaseName();
+                            filePath = path.getName().getPath();
+                            fileExtension = fileName.substring(fileName.lastIndexOf(".") + 1);
+                            bufferedReader = new BufferedReader(
+                                    new InputStreamReader(path.getContent().getInputStream(), StandardCharsets.UTF_8));
+                        }
+
                         String mode = map.get(Constants.MODE);
                         if (Constants.MODE_TYPE_LINE.equalsIgnoreCase(mode) &&
                                 !fileExtension.equalsIgnoreCase(Constants.BINARY_FILE_EXTENSION)) {
                             boolean readOnlyHeader = Boolean.parseBoolean(map.get(Constants.READ_ONLY_HEADER));
                             boolean headerSkipped = !Boolean.parseBoolean(map.get(Constants.HEADER_PRESENT));
-                            bufferedReader = Files.newBufferedReader(Paths.get(filePath));
                             String line;
                             BinaryCarbonMessage message;
                             line = bufferedReader.readLine();
