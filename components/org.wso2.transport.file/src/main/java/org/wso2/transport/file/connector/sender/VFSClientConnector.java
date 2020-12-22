@@ -62,12 +62,26 @@ public class VFSClientConnector implements ClientConnector {
     private static final Logger logger = LoggerFactory.getLogger(VFSClientConnector.class);
     private FileSystemOptions opts = new FileSystemOptions();
     private CarbonMessageProcessor carbonMessageProcessor;
+    private String scheme;
+    private Map<String, Object> properties;
 
     @Override
     public Object init(CarbonMessage cMsg, CarbonCallback callback, Map<String, Object> properties)
             throws ClientConnectorException {
+        this.properties = properties;
+        setOptions(properties);
+        return Boolean.TRUE;
+    }
+
+    private void setOptions(Map<String, Object> properties) throws ClientConnectorException {
         //TODO: Handle FS options configuration for other protocols as well
-        if (Constants.PROTOCOL_FTP.equals(properties.get("PROTOCOL"))) {
+        scheme = null;
+        if (properties.get(Constants.PROTOCOL) != null) {
+            scheme = properties.get(Constants.PROTOCOL).toString();
+        } else if (properties.get(Constants.PROTOCOL) == null && properties.get(Constants.FILE_URI) != null) {
+            scheme = UriParser.extractScheme(properties.get(Constants.FILE_URI).toString());
+        }
+        if (Constants.PROTOCOL_FTP.equals(scheme)) {
             if (properties.get(Constants.FTP_PASSIVE_MODE) != null) {
                 FtpFileSystemConfigBuilder.getInstance().setPassiveMode
                         (opts, Boolean.parseBoolean(properties.get(Constants.FTP_PASSIVE_MODE).toString()));
@@ -81,8 +95,7 @@ public class VFSClientConnector implements ClientConnector {
                 FtpFileSystemConfigBuilder.getInstance().setUserDirIsRoot
                         (opts, true);
             }
-        }
-        if (Constants.PROTOCOL_SFTP.equals(properties.get("PROTOCOL"))) {
+        } else if (Constants.PROTOCOL_SFTP.equals(scheme)) {
             if (properties.get(Constants.USER_DIR_IS_ROOT) != null) {
                 SftpFileSystemConfigBuilder.getInstance().setUserDirIsRoot
                         (opts, Boolean.parseBoolean(properties.get(Constants.USER_DIR_IS_ROOT).toString()));
@@ -109,13 +122,11 @@ public class VFSClientConnector implements ClientConnector {
             if (properties.get(Constants.AVOID_PERMISSION_CHECK) != null) {
                 SftpFileSystemConfigBuilder.getInstance().setAvoidPermissionCheck
                         (opts, properties.get(Constants.AVOID_PERMISSION_CHECK).toString());
-            }  else {
+            } else {
                 SftpFileSystemConfigBuilder.getInstance().setAvoidPermissionCheck
                         (opts, "true");
             }
         }
-
-        return Boolean.TRUE;
     }
 
     @Override
@@ -140,6 +151,10 @@ public class VFSClientConnector implements ClientConnector {
         BufferedReader bufferedReader = null;
         try {
             FileSystemManager fsManager = VFS.getManager();
+            if (scheme == null && properties != null) {
+                properties.put(Constants.FILE_URI, fileURI);
+                setOptions(this.properties);
+            }
             FileObject path = fsManager.resolveFile(fileURI, opts);
             fileType = path.getType();
             switch (action.toLowerCase(Locale.ENGLISH)) {

@@ -27,6 +27,7 @@ public final class Constants {
     public static final String PROTOCOL_FTP = "ftp";
     public static final String PROTOCOL_SFTP = "sftp";
     public static final String BINARY_FILE_EXTENSION = "bin";
+    public static final String PROTOCOL = "PROTOCOL";
 
     public static final String APPEND = "append";
     public static final String FILE_URI = "uri";
