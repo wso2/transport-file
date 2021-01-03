@@ -229,7 +229,7 @@ public class RemoteFileSystemConsumer {
                         directoryHandler(c);
                     }
                 } else {
-                    current.add(child.getName().getPath());
+                    current.add(child.getName().getURI());
                     fileHandler(child);
                 }
             }
@@ -242,8 +242,8 @@ public class RemoteFileSystemConsumer {
      * @param file A single file to be processed
      */
     private void fileHandler(FileObject file) throws FileSystemException {
-        String path = file.getName().getPath();
-        if (processed.contains(file.getName().getPath())) {
+        String path = file.getName().getURI();
+        if (processed.contains(file.getName().getURI())) {
             return;
         }
         FileInfo info = new FileInfo(path);
