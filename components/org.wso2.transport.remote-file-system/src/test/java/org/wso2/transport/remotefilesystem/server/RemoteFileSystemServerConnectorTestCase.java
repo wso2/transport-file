@@ -76,9 +76,9 @@ public class RemoteFileSystemServerConnectorTestCase {
         int expectedEventCount = 3;
         String newFile = "/home/wso2/file2.txt";
         List<String> fileNames = new ArrayList<>();
-        fileNames.add(file1);
-        fileNames.add(file2);
-        fileNames.add(newFile);
+        fileNames.add("ftp://wso2:wso2123@localhost:" + serverPort + "/home/wso2/file1.txt");
+        fileNames.add("ftp://wso2:wso2123@localhost:" + serverPort + "/home/wso2/exe/run.exe");
+        fileNames.add("ftp://wso2:wso2123@localhost:" + serverPort + "/home/wso2/file2.txt");
         Map<String, String> parameters = getPropertyMap();
         CountDownLatch latch = new CountDownLatch(1);
         RemoteFileSystemConnectorFactory connectorFactory = new RemoteFileSystemConnectorFactoryImpl();
@@ -118,7 +118,7 @@ public class RemoteFileSystemServerConnectorTestCase {
     }
 
     @Test(expectedExceptions = RemoteFileSystemConnectorException.class,
-          expectedExceptionsMessageRegExp = "Failed to initialize File server connector for Service: TestService")
+            expectedExceptionsMessageRegExp = "Failed to initialize File server connector for Service: TestService")
     public void invalidRootFolderTestCase() throws InterruptedException, RemoteFileSystemConnectorException {
         int expectedEventCount = 1;
         Map<String, String> parameters = new HashMap<>();
