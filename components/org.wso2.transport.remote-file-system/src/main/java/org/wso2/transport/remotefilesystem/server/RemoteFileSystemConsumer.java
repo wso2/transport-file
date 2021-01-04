@@ -243,7 +243,7 @@ public class RemoteFileSystemConsumer {
      */
     private void fileHandler(FileObject file) throws FileSystemException {
         String path = file.getName().getURI();
-        if (processed.contains(file.getName().getURI())) {
+        if (processed.contains(path)) {
             return;
         }
         FileInfo info = new FileInfo(path);
