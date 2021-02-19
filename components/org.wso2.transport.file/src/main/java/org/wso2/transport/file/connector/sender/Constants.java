@@ -37,6 +37,9 @@ public final class Constants {
     public static final String DELETE = "delete";
     public static final String COPY = "copy";
     public static final String MOVE = "move";
+    public static final String MOVE_IF_EXIST_KEEP = "keep";
+    public static final String MOVE_IF_EXIST_OVERWRITE = "overwrite";
+    public static final String MOVE_IF_EXIST_MODE = "move.if.exist.mode";
     public static final String READ = "read";
     public static final String EXISTS = "exists";
     public static final String FILE_READ_WAIT_TIMEOUT = "fileReadWaitTimeout";

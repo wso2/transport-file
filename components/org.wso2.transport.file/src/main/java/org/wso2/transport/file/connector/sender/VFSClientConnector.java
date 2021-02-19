@@ -54,6 +54,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * A Client Connector implementation for file systems using the Apache VFS library for file operations
@@ -216,6 +217,7 @@ public class VFSClientConnector implements ClientConnector {
                     break;
                 case Constants.MOVE:
                     if (path.exists()) {
+                        String moveIfExistMode = map.get(Constants.MOVE_IF_EXIST_MODE);
                         //TODO: Improve this to fix issue #331
                         String destination = map.get("destination");
                         FileObject newPath = fsManager.resolveFile(destination, opts);
@@ -226,8 +228,26 @@ public class VFSClientConnector implements ClientConnector {
                         if (!newPath.exists()) {
                             path.moveTo(newPath);
                         } else {
-                            throw new ClientConnectorException("The file at " + newPath.getURL().toString() +
-                                    " already exists or it is a directory");
+                            if (moveIfExistMode != null) {
+                                if (moveIfExistMode.equalsIgnoreCase(Constants.MOVE_IF_EXIST_KEEP)) {
+                                    destination += "_" + UUID.randomUUID().toString();
+                                    path.moveTo(fsManager.resolveFile(destination, opts));
+                                } else if (moveIfExistMode.equalsIgnoreCase(Constants.MOVE_IF_EXIST_OVERWRITE)) {
+                                    int fileDeleted = newPath.delete(Selectors.SELECT_SELF);
+                                    if (logger.isDebugEnabled()) {
+                                        logger.debug(fileDeleted + " file successfully deleted in " + destination);
+                                    }
+                                    path.moveTo(newPath);
+                                } else {
+                                    throw new ClientConnectorException("The file at " + newPath.getURL().toString() +
+                                            " already exists or it is a directory and the mode used for if file exist "
+                                            + moveIfExistMode + " is not supported. ");
+                                }
+                            } else {
+                                throw new ClientConnectorException("The file at " + newPath.getURL().toString() +
+                                        " already exists or it is a directory");
+                            }
+
                         }
                     } else {
                         throw new ClientConnectorException(
