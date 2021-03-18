@@ -315,7 +315,6 @@ public class VFSClientConnector implements ClientConnector {
                                 } else {
                                     message = null;
                                 }
-
                                 while ((line = bufferedReader.readLine()) != null) {
                                     lastLine = line;
                                     message = new BinaryCarbonMessage(ByteBuffer.
@@ -333,7 +332,7 @@ public class VFSClientConnector implements ClientConnector {
                                     carbonMessageProcessor.receive(message, carbonCallback);
                                 }
                             } else if (trailerSkipped && line != null) {
-                                boolean isHeaderNeedsToSkip = Boolean.parseBoolean(map.get(Constants.HEADER_PRESENT));
+                                boolean skipSendingLine = Boolean.parseBoolean(map.get(Constants.HEADER_PRESENT));
                                 while (line != null) {
                                     message = new BinaryCarbonMessage(ByteBuffer.
                                             wrap(line.getBytes(StandardCharsets.UTF_8)), true);
@@ -349,12 +348,12 @@ public class VFSClientConnector implements ClientConnector {
                                         line = bufferedReader.readLine();
                                     }
 
-                                    if (!isHeaderNeedsToSkip) {
+                                    if (!skipSendingLine) {
                                         if (line != null) {
                                             carbonMessageProcessor.receive(message, carbonCallback);
                                         }
                                     } else {
-                                        isHeaderNeedsToSkip = false;
+                                        skipSendingLine = false;
                                     }
                                 }
                             } else {
