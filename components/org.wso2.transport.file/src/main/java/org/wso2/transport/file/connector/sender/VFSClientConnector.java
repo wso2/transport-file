@@ -281,6 +281,8 @@ public class VFSClientConnector implements ClientConnector {
                         if (Constants.MODE_TYPE_LINE.equalsIgnoreCase(mode) &&
                                 !fileExtension.equalsIgnoreCase(Constants.BINARY_FILE_EXTENSION)) {
                             boolean readOnlyHeader = Boolean.parseBoolean(map.get(Constants.READ_ONLY_HEADER));
+                            boolean readOnlyTrailer = Boolean.parseBoolean(map.get(Constants.READ_ONLY_TRAILER));
+                            boolean trailerSkipped = Boolean.parseBoolean(map.get(Constants.SKIP_TRAILER));
                             boolean headerSkipped = !Boolean.parseBoolean(map.get(Constants.HEADER_PRESENT));
                             String line;
                             BinaryCarbonMessage message;
@@ -297,6 +299,64 @@ public class VFSClientConnector implements ClientConnector {
                                         org.wso2.transport.file.connector.server.util.Constants.EOF,
                                         true);
                                 carbonMessageProcessor.receive(message, carbonCallback);
+                            } else if (readOnlyTrailer && line != null) {
+                                String lastLine;
+                                if (!Boolean.parseBoolean(map.get(Constants.HEADER_PRESENT))) {
+                                    message = new BinaryCarbonMessage(ByteBuffer.
+                                            wrap(line.getBytes(StandardCharsets.UTF_8)), true);
+                                    message.setProperty(org.wso2.carbon.messaging.Constants.DIRECTION,
+                                            org.wso2.carbon.messaging.Constants.DIRECTION_RESPONSE);
+                                    message.setProperty(
+                                            org.wso2.transport.file.connector.server.util.Constants.FILE_PATH,
+                                            filePath);
+                                    message.setProperty(
+                                            org.wso2.transport.file.connector.server.util.Constants.EOF,
+                                            true);
+                                } else {
+                                    message = null;
+                                }
+
+                                while ((line = bufferedReader.readLine()) != null) {
+                                    lastLine = line;
+                                    message = new BinaryCarbonMessage(ByteBuffer.
+                                            wrap(lastLine.getBytes(StandardCharsets.UTF_8)), true);
+                                    message.setProperty(org.wso2.carbon.messaging.Constants.DIRECTION,
+                                            org.wso2.carbon.messaging.Constants.DIRECTION_RESPONSE);
+                                    message.setProperty(
+                                            org.wso2.transport.file.connector.server.util.Constants.FILE_PATH,
+                                            filePath);
+                                    message.setProperty(
+                                            org.wso2.transport.file.connector.server.util.Constants.EOF,
+                                            true);
+                                }
+                                if (null != message) {
+                                    carbonMessageProcessor.receive(message, carbonCallback);
+                                }
+                            } else if (trailerSkipped && line != null) {
+                                boolean isHeaderNeedsToSkip = Boolean.parseBoolean(map.get(Constants.HEADER_PRESENT));
+                                while (line != null) {
+                                    message = new BinaryCarbonMessage(ByteBuffer.
+                                            wrap(line.getBytes(StandardCharsets.UTF_8)), true);
+                                    message.setProperty(org.wso2.carbon.messaging.Constants.DIRECTION,
+                                            org.wso2.carbon.messaging.Constants.DIRECTION_RESPONSE);
+                                    message.setProperty(
+                                            org.wso2.transport.file.connector.server.util.Constants.FILE_PATH,
+                                            filePath);
+                                    message.setProperty(org.wso2.transport.file.connector.server.util.
+                                            Constants.EOF, false);
+                                    line = bufferedReader.readLine();
+                                    while (line != null && line.isEmpty()) {
+                                        line = bufferedReader.readLine();
+                                    }
+
+                                    if (!isHeaderNeedsToSkip) {
+                                        if (line != null) {
+                                            carbonMessageProcessor.receive(message, carbonCallback);
+                                        }
+                                    } else {
+                                        isHeaderNeedsToSkip = false;
+                                    }
+                                }
                             } else {
                                 while (line != null) {
                                     message = new BinaryCarbonMessage(ByteBuffer.

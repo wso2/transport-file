@@ -48,6 +48,8 @@ public final class Constants {
     public static final String MODE_TYPE_BINARY_CHUNKED = "binary.chunked";
     public static final String HEADER_PRESENT = "header.present";
     public static final String READ_ONLY_HEADER = "read.only.header";
+    public static final String READ_ONLY_TRAILER = "read.only.trailer";
+    public static final String SKIP_TRAILER = "skip.trailer";
     public static final String BUFFER_SIZE_IN_BINARY_CHUNKED = "buffer.size";
 
     // Constants for FTP protocol related configurations
