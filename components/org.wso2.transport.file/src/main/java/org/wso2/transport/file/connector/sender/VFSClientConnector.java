@@ -357,11 +357,11 @@ public class VFSClientConnector implements ClientConnector {
                                                 message.setProperty(org.wso2.transport.file.connector.server.util.
                                                                 Constants.EOF, true);
                                             }
-                                            bufferedReader.reset();
                                             carbonMessageProcessor.receive(message, carbonCallback);
                                             if (isEOFAfterNextLine) {
                                                 break;
                                             }
+                                            bufferedReader.reset();
                                         }
                                     } else {
                                         skipSendingLine = false;
