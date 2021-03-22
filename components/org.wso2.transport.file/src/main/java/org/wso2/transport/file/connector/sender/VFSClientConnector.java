@@ -350,7 +350,18 @@ public class VFSClientConnector implements ClientConnector {
 
                                     if (!skipSendingLine) {
                                         if (line != null) {
+                                            bufferedReader.mark(0);
+                                            String nextLine = bufferedReader.readLine();
+                                            boolean isEOFAfterNextLine = nextLine == null;
+                                            if (isEOFAfterNextLine) {
+                                                message.setProperty(org.wso2.transport.file.connector.server.util.
+                                                                Constants.EOF, true);
+                                            }
+                                            bufferedReader.reset();
                                             carbonMessageProcessor.receive(message, carbonCallback);
+                                            if (isEOFAfterNextLine) {
+                                                break;
+                                            }
                                         }
                                     } else {
                                         skipSendingLine = false;
