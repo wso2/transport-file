@@ -268,7 +268,8 @@ public class VFSClientConnector implements ClientConnector {
                         if (scheme == null || scheme.equals(Constants.PROTOCOL_FILE)) {
                             filePath = path.getName().getPath();
                             fileExtension = filePath.substring(filePath.lastIndexOf(".") + 1);
-                            bufferedReader = Files.newBufferedReader(Paths.get(filePath));
+                            bufferedReader = new BufferedReader(
+                                    new InputStreamReader(path.getContent().getInputStream(), StandardCharsets.UTF_8));
                         } else {
                             String fileName = path.getName().getBaseName();
                             filePath = path.getName().getPath();
