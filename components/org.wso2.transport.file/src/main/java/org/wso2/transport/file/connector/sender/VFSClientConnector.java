@@ -283,7 +283,12 @@ public class VFSClientConnector implements ClientConnector {
                             boolean readOnlyHeader = Boolean.parseBoolean(map.get(Constants.READ_ONLY_HEADER));
                             boolean readOnlyTrailer = Boolean.parseBoolean(map.get(Constants.READ_ONLY_TRAILER));
                             boolean trailerSkipped = Boolean.parseBoolean(map.get(Constants.SKIP_TRAILER));
-                            boolean headerSkipped = !Boolean.parseBoolean(map.get(Constants.HEADER_PRESENT));
+                            int headerLineCount = 0;
+                            if (Boolean.parseBoolean(map.get(Constants.HEADER_PRESENT))) {
+                                String headerLineCountValue = map.get(Constants.HEADER_LINE_COUNT);
+                                headerLineCount =  (headerLineCountValue != null) ?
+                                        Integer.parseInt(headerLineCountValue) : 1;
+                            }
                             String line;
                             BinaryCarbonMessage message;
                             line = bufferedReader.readLine();
@@ -374,6 +379,7 @@ public class VFSClientConnector implements ClientConnector {
                                     }
                                 }
                             } else {
+                                int remainingHeaderLines = headerLineCount;
                                 while (line != null) {
                                     message = new BinaryCarbonMessage(ByteBuffer.
                                             wrap(line.getBytes(StandardCharsets.UTF_8)), true);
@@ -393,10 +399,10 @@ public class VFSClientConnector implements ClientConnector {
                                         message.setProperty(org.wso2.transport.file.connector.server.util.Constants.EOF,
                                                 false);
                                     }
-                                    if (headerSkipped) {
+                                    if (remainingHeaderLines == 0) {
                                         carbonMessageProcessor.receive(message, carbonCallback);
                                     } else {
-                                        headerSkipped = true;
+                                        remainingHeaderLines--;
                                     }
                                 }
                             }

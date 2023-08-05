@@ -58,6 +58,7 @@ public final class Constants {
     public static final String IDENTITY = "IDENTITY";
     public static final String IDENTITY_PASS_PHRASE = "IDENTITY_PASS_PHRASE";
     public static final String AVOID_PERMISSION_CHECK = "AVOID_PERMISSION_CHECK";
+    public static final String HEADER_LINE_COUNT = "header.line.count";
 
     private Constants() {
     }
