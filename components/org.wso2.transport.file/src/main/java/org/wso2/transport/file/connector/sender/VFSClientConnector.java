@@ -336,7 +336,7 @@ public class VFSClientConnector implements ClientConnector {
                                         true);
                                 carbonMessageProcessor.receive(message, carbonCallback);
                             } else if (trailerSkipped && line != null) {
-                                boolean skipSendingLine = Boolean.parseBoolean(map.get(Constants.HEADER_PRESENT));
+                                int remainingHeaderLines = headerLineCount;
                                 String nextLine = bufferedReader.readLine();
                                 while (nextLine != null && nextLine.isEmpty()) {
                                     nextLine = bufferedReader.readLine();
@@ -361,7 +361,7 @@ public class VFSClientConnector implements ClientConnector {
                                     while (lineAfterNextLine != null && lineAfterNextLine.isEmpty()) {
                                         lineAfterNextLine = bufferedReader.readLine();
                                     }
-                                    if (!skipSendingLine) {
+                                    if (remainingHeaderLines == 0) {
                                         if (line != null) {
                                             boolean isEOFAfterNextLine =
                                                     nextLine == null && lineAfterNextLine == null;
@@ -375,7 +375,7 @@ public class VFSClientConnector implements ClientConnector {
                                             }
                                         }
                                     } else {
-                                        skipSendingLine = false;
+                                        remainingHeaderLines--;
                                     }
                                 }
                             } else {
