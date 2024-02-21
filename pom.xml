@@ -141,6 +141,9 @@
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>findbugs-maven-plugin</artifactId>
                 <version>${maven.findbugsplugin.version}</version>
+                <configuration>
+                    <excludeFilterFile>${maven.findbugsplugin.version.exclude}</excludeFilterFile>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -188,6 +191,7 @@
         <javax.xml.transform.import.version.range>[0.0.0, 1.0.0)</javax.xml.transform.import.version.range>
         <javax.xml.validation.import.version.range>[0.0.0, 1.0.0)</javax.xml.validation.import.version.range>
         <javax.net.ssl.import.version.range>[0.0.0, 1.0.0)</javax.net.ssl.import.version.range>
+        <maven.findbugsplugin.version.exclude>findbugs-exclude.xml</maven.findbugsplugin.version.exclude>
 
         <commons-vfs2.wso2.version>2.2-wso2v1</commons-vfs2.wso2.version>
         <commons-vfs2.wso2.version.range>[2.0.0, 3.0.0)</commons-vfs2.wso2.version.range>
