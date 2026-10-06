@@ -143,6 +143,13 @@
                 <version>${maven.findbugsplugin.version}</version>
                 <configuration>
                     <excludeFilterFile>${maven.findbugsplugin.version.exclude}</excludeFilterFile>
+                    <plugins>
+                        <plugin>
+                            <groupId>com.h3xstream.findsecbugs</groupId>
+                            <artifactId>findsecbugs-plugin</artifactId>
+                            <version>${findsecbugs.plugin.version}</version>
+                        </plugin>
+                    </plugins>
                 </configuration>
             </plugin>
             <plugin>
@@ -216,6 +223,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <maven.findbugsplugin.version>3.0.5</maven.findbugsplugin.version>
+        <findsecbugs.plugin.version>1.7.1</findsecbugs.plugin.version>
     </properties>
 
 </project>
