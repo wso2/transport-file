@@ -18,17 +18,6 @@
 
 package org.wso2.transport.file.connector.sender;
 
-import org.apache.commons.vfs2.FileObject;
-import org.apache.commons.vfs2.FileSystemException;
-import org.apache.commons.vfs2.FileSystemManager;
-import org.apache.commons.vfs2.FileSystemOptions;
-import org.apache.commons.vfs2.FileType;
-import org.apache.commons.vfs2.Selectors;
-import org.apache.commons.vfs2.VFS;
-import org.apache.commons.vfs2.provider.UriParser;
-import org.apache.commons.vfs2.provider.ftp.FtpFileSystemConfigBuilder;
-import org.apache.commons.vfs2.provider.sftp.IdentityInfo;
-import org.apache.commons.vfs2.provider.sftp.SftpFileSystemConfigBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wso2.carbon.messaging.BinaryCarbonMessage;
@@ -38,6 +27,17 @@ import org.wso2.carbon.messaging.CarbonMessageProcessor;
 import org.wso2.carbon.messaging.ClientConnector;
 import org.wso2.carbon.messaging.TextCarbonMessage;
 import org.wso2.carbon.messaging.exceptions.ClientConnectorException;
+import org.wso2.org.apache.commons.vfs2.FileObject;
+import org.wso2.org.apache.commons.vfs2.FileSystemException;
+import org.wso2.org.apache.commons.vfs2.FileSystemManager;
+import org.wso2.org.apache.commons.vfs2.FileSystemOptions;
+import org.wso2.org.apache.commons.vfs2.FileType;
+import org.wso2.org.apache.commons.vfs2.Selectors;
+import org.wso2.org.apache.commons.vfs2.VFS;
+import org.wso2.org.apache.commons.vfs2.provider.UriParser;
+import org.wso2.org.apache.commons.vfs2.provider.ftp.FtpFileSystemConfigBuilder;
+import org.wso2.org.apache.commons.vfs2.provider.sftp.IdentityInfo;
+import org.wso2.org.apache.commons.vfs2.provider.sftp.SftpFileSystemConfigBuilder;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -105,12 +105,8 @@ public class VFSClientConnector implements ClientConnector {
                         (opts, true);
             }
             if (properties.get(Constants.IDENTITY) != null) {
-                try {
-                    SftpFileSystemConfigBuilder.getInstance().setIdentityInfo
-                            (opts, new IdentityInfo(new File(properties.get(Constants.IDENTITY).toString())));
-                } catch (FileSystemException e) {
-                    throw new ClientConnectorException(e.getMessage(), e);
-                }
+                SftpFileSystemConfigBuilder.getInstance().setIdentityInfo
+                        (opts, new IdentityInfo(new File(properties.get(Constants.IDENTITY).toString())));
             }
             if (properties.get(Constants.IDENTITY_PASS_PHRASE) != null) {
                 try {

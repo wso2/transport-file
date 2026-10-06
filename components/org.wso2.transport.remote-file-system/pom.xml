@@ -52,10 +52,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>commons-io.wso2</groupId>
-            <artifactId>commons-io</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.mockftpserver</groupId>
             <artifactId>MockFtpServer</artifactId>
             <scope>test</scope>
