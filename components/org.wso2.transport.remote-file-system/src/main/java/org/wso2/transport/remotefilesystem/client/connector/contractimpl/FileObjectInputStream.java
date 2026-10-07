@@ -18,8 +18,8 @@
 
 package org.wso2.transport.remotefilesystem.client.connector.contractimpl;
 
-import org.apache.commons.vfs2.FileObject;
-import org.apache.commons.vfs2.util.MonitorInputStream;
+import org.wso2.org.apache.commons.vfs2.FileObject;
+import org.wso2.org.apache.commons.vfs2.util.MonitorInputStream;
 
 import java.io.IOException;
 import java.io.InputStream;

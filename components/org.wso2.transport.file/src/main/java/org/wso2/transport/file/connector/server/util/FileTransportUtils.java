@@ -18,10 +18,10 @@
 
 package org.wso2.transport.file.connector.server.util;
 
-import org.apache.commons.vfs2.FileSystemException;
-import org.apache.commons.vfs2.FileSystemManager;
-import org.apache.commons.vfs2.FileSystemOptions;
-import org.apache.commons.vfs2.util.DelegatingFileSystemOptionsBuilder;
+import org.wso2.org.apache.commons.vfs2.FileSystemException;
+import org.wso2.org.apache.commons.vfs2.FileSystemManager;
+import org.wso2.org.apache.commons.vfs2.FileSystemOptions;
+import org.wso2.org.apache.commons.vfs2.util.DelegatingFileSystemOptionsBuilder;
 import org.wso2.transport.file.connector.server.exception.FileServerConnectorException;
 
 import java.util.Iterator;

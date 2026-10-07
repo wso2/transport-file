@@ -43,6 +43,10 @@
             <artifactId>org.wso2.carbon.connector.framework</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.quartz-scheduler</groupId>
+            <artifactId>quartz</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>
@@ -67,11 +71,6 @@
             <artifactId>testng</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>commons-io.wso2</groupId>
-            <artifactId>commons-io</artifactId>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
     <properties>
         <export.package>
@@ -83,7 +82,7 @@
             org.slf4j.*;version="${slf4j.logging.package.import.version.range}",
             org.wso2.carbon.messaging.*;version="${carbon.messaging.package.import.version.range}",
             org.wso2.carbon.connector.framework.*;version="${connector.framework.package.export.version}",
-            org.apache.commons.vfs2.*;version="${commons-vfs2.wso2.version.range}"
+            org.wso2.org.apache.commons.vfs2.*;version="${commons-vfs2.wso2.version.range}"
         </import.package>
         <bundle.activator>org.wso2.transport.file.connector.server.internal.FileConnectorBundleActivator</bundle.activator>
         <carbon.component>
