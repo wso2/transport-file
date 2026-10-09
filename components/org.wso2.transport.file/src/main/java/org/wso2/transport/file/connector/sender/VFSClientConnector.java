@@ -126,6 +126,12 @@ public class VFSClientConnector implements ClientConnector {
         }
     }
 
+    private FileObject resolveDestination(FileSystemManager fsManager, String destination)
+            throws FileSystemException {
+        fsManager.getFilesCache().clear(fsManager.resolveFile(destination, opts).getFileSystem());
+        return fsManager.resolveFile(destination, opts);
+    }
+
     @Override
     public boolean send(CarbonMessage carbonMessage, CarbonCallback carbonCallback)
             throws ClientConnectorException {
@@ -204,7 +210,7 @@ public class VFSClientConnector implements ClientConnector {
                 case Constants.COPY:
                     if (path.exists()) {
                         String destination = map.get("destination");
-                        FileObject dest = fsManager.resolveFile(destination, opts);
+                        FileObject dest = resolveDestination(fsManager, destination);
                         dest.copyFrom(path, Selectors.SELECT_ALL);
                     } else {
                         throw new ClientConnectorException(
@@ -216,7 +222,7 @@ public class VFSClientConnector implements ClientConnector {
                         String moveIfExistMode = map.get(Constants.MOVE_IF_EXIST_MODE);
                         //TODO: Improve this to fix issue #331
                         String destination = map.get("destination");
-                        FileObject newPath = fsManager.resolveFile(destination, opts);
+                        FileObject newPath = resolveDestination(fsManager, destination);
                         FileObject parent = newPath.getParent();
                         if (parent != null && !parent.exists()) {
                             parent.createFolder();
